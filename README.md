@@ -88,7 +88,7 @@ npm run test:watch
 
 ### Test Driven Development (TDD) Workflow:
 
-1. Write a failing test first
+**1. Write a failing test first**
 
 - this is only to make sure the testing suite is properly testing the modules
 - name the test file with `<module>.<controller|service|integration>.test.ts` (ex. `user.service.test.ts`)
@@ -99,7 +99,9 @@ npm run test:watch
 > [!NOTE]
 > see the provided example test file (ending with `.test.ts.example`)
 
-2. Write minimum code to make the test pass
+---
+
+**2. Write minimum code to make the test pass**
 
 > [!IMPORTANT] > **Tests should be able to do _EXACTLY_ what it needs to do**
 
@@ -110,12 +112,16 @@ npm run test:watch
 - to run only unit tests: `npm run test:unit`
 - to run tests in watch mode for a specific file: `npm run test:watch <path-to-file>`
 
-3. Refactor while keeping tests green
+---
+
+**3. Refactor while keeping tests green**
 
 > [!NOTE]
 > Always run the test for every logic change/addition you make
 
-Example workflow:
+---
+
+#### **Example workflow:**
 
 ```bash
 # 1. Create a new feature branch
