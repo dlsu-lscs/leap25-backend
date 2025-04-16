@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "type": "commonjs",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --exec ts-node index.ts",
+    "start": "node index.ts"
   },
   "repository": {
     "type": "git",
@@ -19,6 +21,13 @@
   },
   "homepage": "https://github.com/dlsu-lscs/leap25-backend#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.9"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }
