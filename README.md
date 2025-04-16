@@ -103,7 +103,8 @@ npm run test:watch
 
 **2. Write minimum code to make the test pass**
 
-> [!IMPORTANT] > **Tests should be able to do _EXACTLY_ what it needs to do**
+> [!IMPORTANT]
+> Tests should be able to do _EXACTLY_ what it needs to do
 
 - to run a specific test: `npm run test <path-to-test-file>`
 - to run all tests: `npm run test`
