@@ -1,5 +1,8 @@
 # Leap25 Backend
 
+- staging env: deployed to coolify
+- production env: deployed to k3s or docker swarm (or coolify for last resort)
+
 > [!IMPORTANT]
 > READ the [Development Workflow](#development-workflow) for developers to see how to write tests along with your code
 
