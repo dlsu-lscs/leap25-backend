@@ -40,7 +40,7 @@ npm run dev
 - dev dependencies:
 
 ```bash
-npm install -D vitest supertest @types/supertest eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier eslint-config-prettier husky lint-staged @commitlint/cli @commitlint/config-conventional @eslint/js @eslint/eslintrc esbuild
+npm install -D vitest supertest @types/supertest eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier eslint-config-prettier husky lint-staged @commitlint/cli @commitlint/config-conventional @eslint/js @eslint/eslintrc esbuild rimraf cross-env
 ```
 
 ## Testing & Code Quality
@@ -61,6 +61,39 @@ npm run test:watch
 ```
 
 ## Development Workflow
+
+1. Create a new branch from `main`:
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+2. Make your changes and write tests for it (see [Test Driven Development/TDD](#test-driven-development-tdd-workflow) details below)
+
+3. Lint, Format, and Test your changes:
+
+```bash
+npm run format
+npm run lint
+npm run lint:fix
+npm test
+```
+
+4. Stage your changes and commit using [conventional commits](#commit-guidelines)
+
+> [!NOTE]
+> Upon committing, a check will be run to validate everything:
+> `Husky triggers pre-commit hook --> linters, formatters, and tests runs --> commitlint checks commit message format --> if all passes, then commit succeeds` (try to run `git commit` in the terminal)
+
+5. Push your changes to your branch and create a pull request
+
+6. Ensure CI passes and get code review approval
+
+- you can mention us in the pull request conversations so we can check your commits faster
+
+---
+
+### Test Driven Development (TDD) Workflow:
 
 - **The directory structure for tests is expected to be:**
 
@@ -85,8 +118,6 @@ npm run test:watch
 ```
 
 ---
-
-### Test Driven Development (TDD) Workflow:
 
 **1. Write a failing test first**
 
@@ -210,27 +241,6 @@ The repository is set up with Husky and lint-staged. Before each commit:
 ---
 
 ## Contributing
-
-1. Create a new branch from `main`:
-
-```bash
-git checkout -b feature/your-feature-name
-```
-
-2. Make your changes, following our code style guidelines
-
-3. Test your changes:
-
-```bash
-npm run lint
-npm test
-```
-
-4. Commit your changes using conventional commits
-
-5. Push and create a pull request
-
-6. Ensure CI passes and get code review approval
 
 ## CI/CD
 
