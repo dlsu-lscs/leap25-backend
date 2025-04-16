@@ -1,62 +1,71 @@
 {
-    "name": "leap25-backend",
-    "version": "1.0.0",
-    "type": "commonjs",
-    "description": "",
-    "main": "index.ts",
-    "scripts": {
-        "test": "vitest run",
-        "test:watch": "vitest",
-        "test:coverage": "vitest run --coverage",
-        "start": "node index.ts",
-        "dev": "nodemon --exec ts-node index.ts",
-        "lint": "eslint . --ext .ts",
-        "lint:fix": "eslint . --ext .ts --fix",
-        "format": "prettier --write \"**/*.{ts,json,md}\"",
-        "prepare": "husky",
-        "pre-commit": "lint-staged"
-    },
-    "lint-staged": {
-        "*.ts": [
-            "eslint --fix",
-            "prettier --write",
-            "vitest related --run"
-        ],
-        "*.{json,md}": [
-            "prettier --write"
-        ]
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/dlsu-lscs/leap25-backend.git"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/dlsu-lscs/leap25-backend/issues"
-    },
-    "homepage": "https://github.com/dlsu-lscs/leap25-backend#readme",
-    "dependencies": {
-        "dotenv": "^16.5.0",
-        "express": "^5.1.0",
-        "nodemon": "^3.1.9"
-    },
-    "devDependencies": {
-        "@commitlint/cli": "^19.8.0",
-        "@commitlint/config-conventional": "^19.8.0",
-        "@types/express": "^5.0.1",
-        "@types/supertest": "^6.0.3",
-        "@typescript-eslint/eslint-plugin": "^8.30.1",
-        "@typescript-eslint/parser": "^8.30.1",
-        "eslint": "^9.24.0",
-        "eslint-config-prettier": "^10.1.2",
-        "husky": "^9.1.7",
-        "lint-staged": "^15.5.1",
-        "prettier": "^3.5.3",
-        "supertest": "^7.1.0",
-        "ts-node": "^10.9.2",
-        "typescript": "^5.8.3",
-        "vitest": "^3.1.1"
-    }
+  "name": "leap25-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "build": "node build.js",
+    "start": "node dist/index.js",
+    "dev": "nodemon --ext ts --watch './**/*.ts' --exec 'node build.js && node dist/index.js'",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run ./__tests__/api/*.test.ts",
+    "test:unit": "vitest run ./**/__tests__/*.test.ts",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"**/*.{ts,json,md}\"",
+    "prepare": "husky",
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write",
+      "vitest related --run"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dlsu-lscs/leap25-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dlsu-lscs/leap25-backend/issues"
+  },
+  "homepage": "https://github.com/dlsu-lscs/leap25-backend#readme",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.9"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.24.0",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.1",
+    "@types/supertest": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.30.1",
+    "@typescript-eslint/parser": "^8.30.1",
+    "esbuild": "^0.25.2",
+    "eslint": "^9.24.0",
+    "eslint-config-prettier": "^10.1.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.5.3",
+    "supertest": "^7.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
 }
