@@ -6,4 +6,3 @@ Dockerfile
 .vscode
 .env
 *.log
-a
