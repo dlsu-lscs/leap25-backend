@@ -1,0 +1,22 @@
+---
+name: Deploy Staging
+
+on:
+  workflow_run:
+    workflows: ["Continuous Delivery"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment: staging
+    steps:
+      - name: Deploy to Coolify
+        uses: coolify/action-deploy@v1
+        with:
+          api-key: ${{ secrets.COOLIFY_API_KEY }}
+          image: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
