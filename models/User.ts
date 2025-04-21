@@ -1,7 +1,8 @@
 import type { RowDataPacket } from 'mysql2';
 
-export interface User {
+export default interface User {
   id: number;
+  google_id: string;
   email?: string;
   display_picture?: string;
   name?: string;
