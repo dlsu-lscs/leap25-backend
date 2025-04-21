@@ -101,23 +101,10 @@ npm test
 - **The directory structure for tests is expected to be:**
 
 ```txt
-├── __tests__/         # Integration tests (required)
-│   └── api/
-├── controllers/
-│   ├── __tests__/     # Controller unit tests (required)
-│   └── ...
-├── services/
-│   ├── __tests__/     # Service unit tests (required)
-│   └── ...
-├── models/
-│   ├── __tests__/     # Model unit tests (optional)
-│   └── ...
-├── utils/
-│   ├── __tests__/     # Utility unit tests (optional)
-│   └── ...
-└── routes/
-    ├── __tests__/     # Route unit tests (optional)
-    └── ...
+├── tests/
+│   └── integration/           # Integration tests (required)
+│   └── unit/
+│       └── services_test/     # Services unit tests (required)
 ```
 
 ---
@@ -125,13 +112,13 @@ npm test
 **1. Write a failing test first**
 
 - this is only to make sure the testing suite is properly testing the modules
-- name the test file with `<module>.<controller|service|integration>.test.ts` (ex. `user.service.test.ts`)
+- name the test file with `<module>.<service|integration>.test.ts` (ex. `user.service.test.ts`)
 
 > [!IMPORTANT]
 > Failing tests are removed right after running the initial test
 
 > [!NOTE]
-> see the provided example test file (ending with `.test.ts.example`)
+> see the provided example test file inside the `test` directory (ending with `.test.ts.example`)
 
 ---
 
@@ -141,11 +128,12 @@ npm test
 > Tests should be able to do _EXACTLY_ what it needs to do
 
 - to run a specific test: `npm run test <path-to-test-file>`
-- to run all tests: `npm run test`
 - to run tests matching a specific name pattern, use the `-t` flag: `npm run test -t "should create a new user"`
-- to run only integration tests: `npm run test:integration`
-- to run only unit tests: `npm run test:unit`
 - to run tests in watch mode for a specific file: `npm run test:watch <path-to-file>`
+
+- to run all tests: `npm run test`
+- to run all integration tests: `npm run test:integration`
+- to run all unit tests: `npm run test:unit`
 
 ---
 
@@ -172,11 +160,11 @@ npm run test:watch
 ## to run a specific test:
 npm run test <path-to-test-file>
 ### example:
-npm run test __tests__/api/user.integration.test.ts
+npm run test tests/integration/user.integration.test.ts
 
 # 5. Refactor if needed
 
-# 6. Run all tests
+# 6. Run all tests (NOTE: you can skip this step and go straight to commit since this runs automatically when trying to git commit)
 npm run test
 
 # 7. Commit changes
@@ -259,11 +247,17 @@ GitHub Actions will automatically:
 
 ## Available Scripts
 
-- `npm run dev` - start development server
-- `npm start` - start production server
-- `npm test` - run tests
+- `npm run dev` - start development server with nodemon
+- `npm run build` - build project with ESBuild
+- `npm run start` - start production server
+- `npm run clean` - remove dist directory (generated on npm run build)
+
+- `npm run test` - run all tests
 - `npm run test:watch` - run tests in watch mode
 - `npm run test:coverage` - run tests with coverage report
+- `npm run test:integration` - run all integration tests
+- `npm run test:unit` - run all unit tests
+
 - `npm run lint` - check linting
 - `npm run lint:fix` - fix linting issues
 - `npm run format` - format code

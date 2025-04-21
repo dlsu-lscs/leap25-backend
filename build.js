@@ -10,6 +10,19 @@ try {
     format: 'esm',
     sourcemap: true,
     external: ['express', 'dotenv'],
+    plugins: [
+      {
+        name: 'alias',
+        setup(build) {
+          build.onResolve({ filter: /^@\// }, (args) => {
+            return {
+              path: args.path.replace('@/', './'),
+              resolveDir: process.cwd(),
+            };
+          });
+        },
+      },
+    ],
   });
   console.log('Build complete');
 } catch (error) {
