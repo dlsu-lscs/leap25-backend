@@ -13,7 +13,7 @@
     "test:watch": "vitest --config ./vitest.config.ts",
     "test:coverage": "vitest run --coverage --config ./vitest.config.ts",
     "test:integration": "vitest run \"./tests/integration/*.test.ts\" --config ./vitest.config.ts",
-    "test:unit": "vitest run \"./tests/unit/**/.test.ts\" --config ./vitest.config.ts",
+    "test:unit": "vitest run \"./tests/unit/.test.ts\" --config ./vitest.config.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"**/*.{ts,json,md}\"",
