@@ -102,9 +102,10 @@ npm test
 
 ```txt
 ├── tests/
-│   └── integration/           # Integration tests (required)
-│   └── unit/
-│       └── services_test/     # Services unit tests (required)
+│   └── integration/                     # Integration unit tests (required)
+│       └── user.integration.test.ts
+│   └── unit/                            # Unit tests (required for services)
+│       └── user.service.test.ts
 ```
 
 ---
