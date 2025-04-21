@@ -9,7 +9,7 @@ try {
     outdir: 'dist',
     format: 'esm',
     sourcemap: true,
-    external: ['express', 'dotenv'],
+    external: ['express', 'dotenv', 'passport', 'util'],
   });
   console.log('Build complete');
 } catch (error) {

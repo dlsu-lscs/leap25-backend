@@ -1,9 +1,9 @@
-import mysql from 'mysql2';
+import mysql from 'mysql2/promise';
 
 const db = mysql.createPool({
   host: process.env.DB_HOST!,
-  user: process.env.DB_USERNAME!,
-  password: process.env.DB_PASSWORD!,
+  user: process.env.DB_USER!,
+  password: process.env.DB_PASS!,
   database: process.env.DB_DATABASE!,
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined,
 });
