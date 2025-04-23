@@ -1,8 +1,8 @@
+---
 services:
   api:
     build:
       context: .
-      dockerfile: dockerfile
     container_name: leap25-api
     ports:
       - 3000:3000
@@ -19,13 +19,12 @@ services:
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=Dev123456
-      - MYSQL_DATABASE= leap25-db
+      - MYSQL_DATABASE=leap25-db
       - MYSQL_USER=leapdev
       - MYSQL_PASSWORD=Dev123456
     volumes:
-      mysql_data_leap25:/var/lib/mysql
+      - mysql_data_leap25:/var/lib/mysql
 
-  volumes:
-    mysql_data_leap25:
-
+volumes:
+  mysql_data_leap25:
 
