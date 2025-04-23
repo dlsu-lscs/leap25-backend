@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 // TODO: assuming this is how yall create the user module
-import { UserService } from '../user.service';
+import { UserService } from '@/services/user.service';
 
 describe('UserService', () => {
     // Passing test
