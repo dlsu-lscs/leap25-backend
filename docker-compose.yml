@@ -14,8 +14,7 @@ services:
       - DB_USER_PASSWORD=Dev123456
       - DB_NAME=leap25_db
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     restart: unless-stopped
 
   mysql:
