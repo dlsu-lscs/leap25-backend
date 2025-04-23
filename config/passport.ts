@@ -1,29 +1,25 @@
 // TODO:
 // - setup passport-google-oauth20
 // - setup JWT
-/*
+
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { createRequire } from 'node:module';
-import type { Profile } from 'passport';
+import passport from 'passport';
 import db from './connectdb.ts';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 import type IUser from '../models/User';
-
-const require = createRequire(import.meta.url);
-const passport = require('passport');
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      callbackURL: 'http://localhost:3000/auth/google/callback', // temporary local callback
+      callbackURL: 'http://localhost:3000/oauth2/redirect/google', // temporary local callback
       scope: ['profile', 'email'],
     },
     async function verify(
-      _accessToken: string,
-      _refreshToken: string,
-      profile: Profile,
+      _accessToken: string, // not used
+      _refreshToken: string, // not used
+      profile: passport.Profile,
       done: (error: Error | null, user?: IUser | false) => void
     ) {
       try {
@@ -68,4 +64,4 @@ passport.use(
       }
     }
   )
-);*/
+);

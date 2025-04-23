@@ -9,7 +9,14 @@ try {
     outdir: 'dist',
     format: 'esm',
     sourcemap: true,
-    external: ['express', 'dotenv', 'passport', 'util'],
+    external: [
+      'express',
+      'dotenv',
+      'passport',
+      'util',
+      'passport-google-oauth20',
+      'mysql2',
+    ],
   });
   console.log('Build complete');
 } catch (error) {
