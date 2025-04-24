@@ -46,6 +46,20 @@ npm run dev
 npm install -D vitest supertest @types/supertest eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier eslint-config-prettier husky lint-staged @commitlint/cli @commitlint/config-conventional @eslint/js @eslint/eslintrc esbuild rimraf cross-env
 ```
 
+## Run Locally with Docker Compose
+
+1. From the project root start the services:
+   
+```bash
+docker compose up --build
+```
+
+2. To stop the services:
+   
+```bash
+docker compose down
+```
+
 ## Testing & Code Quality
 
 - for local testing and running linters & formatters:
