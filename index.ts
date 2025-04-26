@@ -4,7 +4,7 @@ import './config/passport.ts';
 import 'dotenv/config';
 import authRouter from './routes/auth.routes';
 import db from './config/connectdb.ts';
-import { sessionMiddleware } from './config/sessions.ts';
+// import { sessionMiddleware } from './config/sessions.ts';
 
 const app = express();
 const port = process.env.PORT || 3000;
