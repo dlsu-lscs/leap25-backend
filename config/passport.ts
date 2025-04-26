@@ -57,6 +57,8 @@ passport.use(
           user = rows[0] as IUser;
         }
 
+        console.log('Authentication successful. Redirecting..');
+
         // callback with the user object (new or existing user)
         return done(null as null, user as IUser);
       } catch (error) {
@@ -65,7 +67,7 @@ passport.use(
     }
   )
 );
-
+/*
 passport.serializeUser(function (user: IUser, done) {
   done(null, user.id);
 });
@@ -86,4 +88,4 @@ passport.deserializeUser(async function (id: number, done) {
   } catch (error) {
     done(error);
   }
-});
+});*/
