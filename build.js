@@ -9,7 +9,16 @@ try {
     outdir: 'dist',
     format: 'esm',
     sourcemap: true,
-    external: ['express', 'dotenv'],
+    external: [
+      'express',
+      'dotenv',
+      'passport',
+      'util',
+      'passport-google-oauth20',
+      'mysql2',
+      'express-session',
+      'redis',
+    ],
     plugins: [
       {
         name: 'alias',
