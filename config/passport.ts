@@ -13,7 +13,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      callbackURL: 'http://localhost:3000/oauth2/redirect/google', // temporary local callback
+      callbackURL: 'http://localhost:3000/oauth2/redirect/google', // temporary local callback (use env variables for url)
       scope: ['profile', 'email'],
     },
     async function verify(
@@ -65,3 +65,25 @@ passport.use(
     }
   )
 );
+
+passport.serializeUser(function (user: IUser, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async function (id: number, done) {
+  try {
+    const [rows] = await db.query<RowDataPacket[]>(
+      'SELECT * FROM users WHERE id = ?',
+      [id]
+    );
+
+    if (rows.length == 0) {
+      return done(null, false);
+    }
+
+    const user = rows[0] as IUser;
+    done(null, user);
+  } catch (error) {
+    done(error);
+  }
+});

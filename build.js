@@ -16,6 +16,8 @@ try {
       'util',
       'passport-google-oauth20',
       'mysql2',
+      'express-session',
+      'redis',
     ],
     plugins: [
       {

@@ -1,5 +1,6 @@
 import express, { urlencoded, json } from 'express';
 import type { PoolConnection } from 'mysql2/promise';
+import passport from 'passport';
 import './config/passport.ts';
 import 'dotenv/config';
 import authRouter from './routes/auth.routes';
@@ -12,6 +13,8 @@ const port = process.env.PORT || 3000;
 app.use(urlencoded({ extended: true }));
 app.use(json());
 app.use(sessionMiddleware);
+app.use(passport.initialize());
+app.use(passport.session());
 
 const connectDB = async (): Promise<void> => {
   try {
