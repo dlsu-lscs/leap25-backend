@@ -2,7 +2,7 @@ import session from 'express-session';
 import { createClient } from 'redis';
 import { RedisStore } from 'connect-redis';
 
-const redisClient = createClient({ url: 'redis://localhost:6379' });
+export const redisClient = createClient({ url: 'redis://localhost:6379' });
 await redisClient.connect();
 
 const store = new RedisStore({
