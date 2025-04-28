@@ -7,6 +7,7 @@ import passport from 'passport';
 import db from './connectdb.ts';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 import type IUser from '../models/User';
+import { redisClient } from './sessions.ts';
 
 passport.use(
   new GoogleStrategy(
@@ -67,13 +68,16 @@ passport.use(
     }
   )
 );
-/*
+
 passport.serializeUser(function (user: IUser, done) {
   done(null, user.id);
 });
 
 passport.deserializeUser(async function (id: number, done) {
   try {
+    const cached_user = await redisClient.get(`user:${id}`);
+    if (cached_user) return done(null, JSON.parse(cached_user));
+
     const [rows] = await db.query<RowDataPacket[]>(
       'SELECT * FROM users WHERE id = ?',
       [id]
@@ -84,8 +88,11 @@ passport.deserializeUser(async function (id: number, done) {
     }
 
     const user = rows[0] as IUser;
+
+    await redisClient.setEx(`user:${id}`, 3600, JSON.stringify(user));
+
     done(null, user);
   } catch (error) {
     done(error);
   }
-});*/
+});
