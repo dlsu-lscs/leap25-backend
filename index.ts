@@ -32,12 +32,6 @@ connectDB();
 // General endpoints
 app.use('/oauth2', authRouter);
 
-// Get session value
-app.get('/get-session', (req, res) => {
-  console.log('Current session:', req.session);
-  res.json(req.session);
-});
-
 // Temporary base tester route
 app.use('/', function (req, res) {
   res.status(200).json('Hello World!');
