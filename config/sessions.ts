@@ -2,7 +2,7 @@ import session from 'express-session';
 import { createClient } from 'redis';
 import { RedisStore } from 'connect-redis';
 
-const redisClient = createClient({ url: 'redis://localhost:6379' });
+export const redisClient = createClient({ url: 'redis://localhost:6379' });
 await redisClient.connect();
 
 const store = new RedisStore({
@@ -17,7 +17,7 @@ export const sessionMiddleware = session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE == 'production',
+    secure: process.env.NODE_ENV == 'production',
     sameSite: 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   },
