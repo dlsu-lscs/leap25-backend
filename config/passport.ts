@@ -4,7 +4,7 @@
 
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import passport from 'passport';
-import db from './connectdb.ts';
+import db from './connectdb';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 import type { IUser } from '../models/User';
 import { redisClient } from './sessions';
