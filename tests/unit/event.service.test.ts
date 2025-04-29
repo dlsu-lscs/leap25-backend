@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as EventService from '../../services/event.service';
-import { db } from '../../config/db';
+import db from '../../config/connectdb';
 
 // Mock the database
-vi.mock('../../config/db', () => ({
-  db: {
+vi.mock('../../config/connectdb', () => ({
+  default: {
     execute: vi.fn(),
     query: vi.fn(),
   },
@@ -27,6 +27,7 @@ describe('EventService Unit Tests', () => {
       schedule: now,
       fee: 100,
       code: 'CODE123',
+      registered_slots: 0,
       max_slots: 50,
     };
 
@@ -37,21 +38,23 @@ describe('EventService Unit Tests', () => {
     const result = await EventService.createEvent(mockEvent);
 
     // Assert
+
     expect(db.execute).toHaveBeenCalledWith(
       'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
-        mockEvent.org_id,
-        mockEvent.title,
-        mockEvent.description,
-        mockEvent.subtheme_id,
-        mockEvent.venue,
-        mockEvent.schedule,
-        mockEvent.fee,
-        mockEvent.code,
-        undefined, // registered_slots is optional
-        mockEvent.max_slots,
+        mockEvent.org_id ?? null,
+        mockEvent.title ?? null,
+        mockEvent.description ?? null,
+        mockEvent.subtheme_id ?? null,
+        mockEvent.venue ?? null,
+        mockEvent.schedule ?? null,
+        mockEvent.fee ?? null,
+        mockEvent.code ?? null,
+        mockEvent.registered_slots ?? null,
+        mockEvent.max_slots ?? null,
       ]
     );
+
     expect(result).toEqual({
       id: 1,
       ...mockEvent,

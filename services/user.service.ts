@@ -1,5 +1,5 @@
 import mysql from 'mysql2/promise';
-import { db } from '../config/db';
+import db from '../config/connectdb';
 import type { User, CreateUser, UpdateUser } from '../models/User';
 
 export async function createUser(data: CreateUser): Promise<User> {

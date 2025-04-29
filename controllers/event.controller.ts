@@ -7,6 +7,7 @@ export async function getAllEvents(
   next: NextFunction
 ): Promise<void> {
   try {
+    console.log(req.body);
     const events = await EventService.getAllEvents();
     res.status(200).json(events);
   } catch (error) {
