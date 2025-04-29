@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise';
 import { db } from '../config/db';
-import type { Event, CreateEvent, UpdateEvent } from '../models/event';
+import type { Event, CreateEvent, UpdateEvent } from '../models/Event';
 
 export async function createEvent(data: CreateEvent): Promise<Event> {
   const {

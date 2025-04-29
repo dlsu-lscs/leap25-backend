@@ -1,16 +1,16 @@
 import mysql from 'mysql2/promise';
 import { db } from '../config/db';
-import type { User, CreateUser, UpdateUser } from '../models/user';
+import type { User, CreateUser, UpdateUser } from '../models/User';
 
 export async function createUser(data: CreateUser): Promise<User> {
-  const { email, display_picture, name } = data;
+  const { email, display_picture, name, google_id } = data;
   const [result] = await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO users (email, display_picture, name) VALUES (?, ?, ?)',
-    [email, display_picture ?? null, name]
+    'INSERT INTO users (email, display_picture, name, google_id) VALUES (?, ?, ?, ?)',
+    [email, display_picture ?? null, name, google_id ?? null]
   );
 
   const insertId = result.insertId;
-  return { id: insertId, email, display_picture, name };
+  return { id: insertId, email, display_picture, name, google_id };
 }
 
 export async function getAllUsers(): Promise<User[]> {
@@ -35,11 +35,12 @@ export async function updateUser(
     email = existingUser.email,
     display_picture = existingUser.display_picture ?? null,
     name = existingUser.name,
+    google_id = existingUser.google_id,
   } = data;
 
   await db.execute(
-    'UPDATE users SET email = ?, display_picture = ?, name = ? WHERE id = ?',
-    [email, display_picture ?? null, name, id]
+    'UPDATE users SET email = ?, display_picture = ?, name = ?, google_id = ? WHERE id = ?',
+    [email, display_picture ?? null, name, google_id ?? null, id]
   );
 
   return getUserById(id);
