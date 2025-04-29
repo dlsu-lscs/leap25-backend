@@ -1,69 +1,112 @@
-import { describe, it, expect, afterAll } from 'vitest';
-import * as UserService from '../user.service';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as UserService from '../../services/user.service';
 import { db } from '../../config/db';
-import type { CreateUser, UpdateUser } from '../../models/user';
 
-describe('UserService', () => {
-  let UID: number;
+// mock db
+vi.mock('../../config/db', () => ({
+  db: {
+    execute: vi.fn(),
+    query: vi.fn(),
+  },
+}));
 
-  const UserData: CreateUser = {
-    email: 'testemail@example.com',
-    name: 'Test User',
-    display_picture: '',
-  };
-
-  // Cleanup
-  afterAll(async () => {
-    if (UID) {
-      await UserService.deleteUser(UID);
-    }
-    await db.end();
+describe('UserService Unit Tests', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
   it('should create a new user', async () => {
-    const user = await UserService.createUser(UserData);
+    const mockUser = {
+      email: 'test@example.com',
+      name: 'Test User',
+      display_picture: '',
+    };
 
-    expect(user).toHaveProperty('id');
-    expect(user.email).toBe(UserData.email);
-    expect(user.name).toBe(UserData.name);
+    const mockResult = [{ insertId: 1 }];
+    (db.execute as any).mockResolvedValueOnce(mockResult);
 
-    UID = user.id;
+    const result = await UserService.createUser(mockUser);
+
+    expect(db.execute).toHaveBeenCalledWith(
+      'INSERT INTO users (email, display_picture, name, google_id) VALUES (?, ?, ?, ?)',
+      [mockUser.email, mockUser.display_picture, mockUser.name, null]
+    );
+    expect(result).toEqual({
+      id: 1,
+      ...mockUser,
+      google_id: undefined,
+    });
   });
 
   it('should get all users', async () => {
-    const users = await UserService.getAllUsers();
+    const mockUsers = [
+      { id: 1, email: 'user1@example.com', name: 'User 1' },
+      { id: 2, email: 'user2@example.com', name: 'User 2' },
+    ];
+    (db.query as any).mockResolvedValueOnce([mockUsers]);
 
-    expect(Array.isArray(users)).toBe(true);
-    expect(users.length).toBeGreaterThan(0);
+    const result = await UserService.getAllUsers();
+
+    expect(db.query).toHaveBeenCalledWith('SELECT * FROM users');
+    expect(result).toEqual(mockUsers);
   });
 
-  it('should get a user by id', async () => {
-    const user = await UserService.getUserById(UID);
+  it('should get user by id', async () => {
+    const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
+    (db.query as any).mockResolvedValueOnce([[mockUser]]);
 
-    expect(user).not.toBeNull();
-    if (user) {
-      expect(user.id).toBe(UID);
-      expect(user.email).toBe(UserData.email);
-    }
+    const result = await UserService.getUserById(1);
+
+    expect(db.query).toHaveBeenCalledWith('SELECT * FROM users WHERE id = ?', [
+      1,
+    ]);
+    expect(result).toEqual(mockUser);
+  });
+
+  it('should return null if user not found', async () => {
+    (db.query as any).mockResolvedValueOnce([[]]);
+
+    const result = await UserService.getUserById(999);
+
+    expect(result).toBeNull();
   });
 
   it('should update a user', async () => {
-    const updatedData: UpdateUser = {
-      name: 'Updated Test User',
+    const userId = 1;
+    const updateData = { name: 'Updated Name' };
+    const existingUser = {
+      id: userId,
+      email: 'test@example.com',
+      name: 'Old Name',
+      display_picture: null,
+      google_id: null,
     };
+    const updatedUser = { ...existingUser, ...updateData };
 
-    const updatedUser = await UserService.updateUser(UID, updatedData);
+    // Mock getUserById call in updateUser
+    (db.query as any).mockResolvedValueOnce([[existingUser]]);
+    // Mock the update execute call
+    (db.execute as any).mockResolvedValueOnce([{}]);
+    // Mock the second getUserById call to return updated user
+    (db.query as any).mockResolvedValueOnce([[updatedUser]]);
 
-    expect(updatedUser).not.toBeNull();
-    if (updatedUser) {
-      expect(updatedUser.name).toBe(updatedData.name);
-    }
+    const result = await UserService.updateUser(userId, updateData);
+
+    expect(db.execute).toHaveBeenCalledWith(
+      'UPDATE users SET email = ?, display_picture = ?, name = ?, google_id = ? WHERE id = ?',
+      [existingUser.email, null, updateData.name, null, userId]
+    );
+    expect(result).toEqual(updatedUser);
   });
 
   it('should delete a user', async () => {
-    await UserService.deleteUser(UID);
-    const deletedUser = await UserService.getUserById(UID);
+    const userId = 1;
+    (db.execute as any).mockResolvedValueOnce([{}]);
 
-    expect(deletedUser).toBeNull();
+    await UserService.deleteUser(userId);
+
+    expect(db.execute).toHaveBeenCalledWith('DELETE FROM users WHERE id = ?', [
+      userId,
+    ]);
   });
 });

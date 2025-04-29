@@ -12,8 +12,9 @@
     "test": "vitest run --config ./vitest.config.ts",
     "test:watch": "vitest --config ./vitest.config.ts",
     "test:coverage": "vitest run --coverage --config ./vitest.config.ts",
-    "test:integration": "vitest run \"./tests/integration/*.test.ts\" --config ./vitest.config.ts",
-    "test:unit": "vitest run \"./tests/unit/.test.ts\" --config ./vitest.config.ts",
+    "test:unit": "vitest run tests/unit --config ./vitest.config.ts",
+    "test:integration": "vitest run tests/integration --config ./vitest.config.ts",
+    "test:skip-integration": "vitest run --config ./vitest.config.ts --exclude 'tests/integration/**/*.ts'",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"**/*.{ts,json,md}\"",
@@ -23,7 +24,8 @@
   "lint-staged": {
     "*.ts": [
       "eslint --fix",
-      "prettier --write"
+      "prettier --write",
+      "vitest related --run --config ./vitest.config.ts --dir tests/unit"
     ],
     "*.{json,md}": [
       "prettier --write"
