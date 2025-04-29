@@ -17,20 +17,8 @@ try {
       'passport-google-oauth20',
       'mysql2',
       'express-session',
+      'connect-redis',
       'redis',
-    ],
-    plugins: [
-      {
-        name: 'alias',
-        setup(build) {
-          build.onResolve({ filter: /^@\// }, (args) => {
-            return {
-              path: args.path.replace('@/', './'),
-              resolveDir: process.cwd(),
-            };
-          });
-        },
-      },
     ],
   });
   console.log('Build complete');

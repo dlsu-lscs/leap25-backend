@@ -4,10 +4,10 @@
 
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import passport from 'passport';
-import db from './connectdb.ts';
+import db from './connectdb';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
-import type IUser from '../models/User';
-import { redisClient } from './sessions.ts';
+import type { IUser } from '../models/User';
+import { redisClient } from './sessions';
 
 passport.use(
   new GoogleStrategy(
@@ -47,13 +47,15 @@ passport.use(
             [email, display_picture, name, google_id]
           );
 
-          user = {
+          const newUser = {
             id: result.insertId,
             name,
             email,
             display_picture,
             google_id,
-          };
+          } as IUser;
+
+          user = newUser;
         } else {
           user = rows[0] as IUser;
         }
@@ -69,8 +71,9 @@ passport.use(
   )
 );
 
-passport.serializeUser(function (user: IUser, done) {
-  done(null, user.id);
+passport.serializeUser(function (user: Express.User, done) {
+  const userRecord = user as unknown as IUser;
+  done(null, userRecord.id);
 });
 
 passport.deserializeUser(async function (id: number, done) {

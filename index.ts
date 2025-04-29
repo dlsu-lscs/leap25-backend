@@ -2,6 +2,8 @@ import express, { urlencoded, json } from 'express';
 import type { PoolConnection } from 'mysql2/promise';
 import './config/passport.ts';
 import 'dotenv/config';
+import userRouter from './routes/user.routes';
+import eventRouter from './routes/event.routes';
 import authRouter from './routes/auth.routes';
 import db from './config/connectdb.ts';
 import passport from 'passport';
@@ -36,6 +38,9 @@ app.use('/oauth2', authRouter);
 app.use('/', function (req, res) {
   res.status(200).json('Hello World!');
 });
+
+app.use('/users', userRouter);
+app.use('/events', eventRouter);
 
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
