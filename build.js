@@ -18,6 +18,12 @@ try {
       'mysql2',
       'express-session',
       'redis',
+      'google-auth-library',
+      'child_process',
+      'fs',
+      'path',
+      'os',
+      'jsonwebtoken',
     ],
     plugins: [
       {
