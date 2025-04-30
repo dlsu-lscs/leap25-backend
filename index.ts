@@ -30,7 +30,7 @@ const connectDB = async (): Promise<void> => {
 connectDB();
 
 // General endpoints
-app.use('/oauth2', authRouter);
+app.use('/auth', authRouter);
 
 // Get session value
 app.get('/get-session', (req, res) => {

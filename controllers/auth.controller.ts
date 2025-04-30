@@ -32,7 +32,7 @@ export const authController = async function (
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> {
+): Promise<undefined> {
   const { token: accessToken } = req.body;
 
   try {
