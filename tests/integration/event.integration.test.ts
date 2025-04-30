@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import * as EventService from '../../services/event.service';
-import { db } from '../../config/db';
+import db from '../../config/connectdb';
 
 describe('EventService Integration Tests', () => {
   let createdEventId: number;
@@ -17,6 +17,7 @@ describe('EventService Integration Tests', () => {
     fee: 100,
     code: 'INTTEST',
     max_slots: 200,
+    registered_slots: 0,
   };
 
   beforeAll(async () => {

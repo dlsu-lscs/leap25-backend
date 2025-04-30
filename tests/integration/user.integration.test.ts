@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import * as UserService from '../../services/user.service';
-import { db } from '../../config/db';
+import db from '../../config/connectdb';
 // import { db } from '../setup-mockdb.ts';
 
 describe('UserService Integration Tests', () => {

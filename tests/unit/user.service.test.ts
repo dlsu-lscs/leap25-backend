@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as UserService from '../../services/user.service';
-import { db } from '../../config/db';
+import db from '../../config/connectdb';
 
 // mock db
-vi.mock('../../config/db', () => ({
-  db: {
+vi.mock('../../config/connectdb', () => ({
+  default: {
     execute: vi.fn(),
     query: vi.fn(),
   },
