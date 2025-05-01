@@ -36,14 +36,17 @@ export const authController = async function (
   const { token: accessToken } = req.body;
 
   try {
-    const jwt_token = await googleAuth2(accessToken);
+    const result = await googleAuth2(accessToken);
 
-    if (!jwt_token) {
+    if (!result) {
       res.status(400).json({ error: 'Invalid JWT.' });
       return;
     }
 
+    const { jwt_token, user } = result;
+
     (req.session as any).jwt = jwt_token;
+    (req.session as any).user = user;
 
     res.status(200).json(jwt_token);
   } catch (error) {

@@ -1,9 +1,12 @@
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
+import type User from '../models/User';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-export async function googleAuth2(accessToken: string): Promise<string | null> {
+export async function googleAuth2(
+  accessToken: string
+): Promise<{ jwt_token: string; user: User } | null> {
   if (!accessToken) return null;
 
   try {
@@ -26,7 +29,7 @@ export async function googleAuth2(accessToken: string): Promise<string | null> {
       expiresIn: '30d',
     });
 
-    return jwt_token;
+    return { user, jwt_token };
   } catch (error) {
     console.log('Error on authentication: ' + (error as Error).message);
     return null;
