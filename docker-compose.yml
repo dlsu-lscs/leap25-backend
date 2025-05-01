@@ -3,34 +3,64 @@ services:
   api:
     build:
       context: .
+      dockerfile: Dockerfile
     container_name: leap25-api
     ports:
-      - 3000:3000
+      - "3000:3000"
     environment:
       - NODE_ENV=development
-      - DB_HOST=mysql
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DATABASE=leap25db
+      - DB_HOST=localhost
+      - DB_USER=root
+      - DB_PASS=root
+      - DB_NAME=leap25db
       - DB_PORT=3306
-      - DB_USER=leapdev
-      - DB_USER_PASSWORD=Dev123456
-      - DB_NAME=leap25_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SESSION_SECRET=secret
+      - PORT=3000
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   mysql:
-    image: mysql:8.4
+    image: mysql:8.0
     container_name: leap25-mysql
-    restart: always
+    restart: unless-stopped
     ports:
       - "3306:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=Dev123456
-      - MYSQL_DATABASE=leap25_db
-      - MYSQL_USER=leapdev
-      - MYSQL_PASSWORD=Dev123456
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: leap25db
     volumes:
-      - mysql_data_leap25:/var/lib/mysql
+      - mysql-data-leap25:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis-data-leap25:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
 volumes:
-  mysql_data_leap25:
-
+  mysql-data-leap25:
+  redis-data-leap25:

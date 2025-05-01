@@ -7,7 +7,7 @@ export default [
   eslint.configs.recommended,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.mjs'],
-    ignores: ['**/passport.ts'],
+    ignores: ['**/config/passport.ts'],
     languageOptions: {
       parser: typescript,
       parserOptions: {
@@ -24,7 +24,7 @@ export default [
     },
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'warn',
-      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
   prettier,

@@ -1,29 +1,24 @@
 {
   "compilerOptions": {
-    /* Base Options: */
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node10",
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "target": "es2022",
+    "allowSyntheticDefaultImports": true,
     "verbatimModuleSyntax": true,
     "allowJs": true,
-    "resolveJsonModule": true,
     "isolatedModules": true,
-    "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
-    /* Strictness */
     "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "baseUrl": "./",
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "moduleResolution": "node",
-    "module": "ESNext",
-    "noEmit": true,
-    /* If your code doesn't run in the DOM: */
-    "lib": ["es2022"],
-    "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["*"]
-    }
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "lib": ["es2022"]
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]

@@ -2,10 +2,14 @@ import express, { urlencoded, json } from 'express';
 import type { PoolConnection } from 'mysql2/promise';
 import './config/passport.ts';
 import 'dotenv/config';
+import userRouter from './routes/user.routes';
+import eventRouter from './routes/event.routes';
 import authRouter from './routes/auth.routes';
-import db from './config/connectdb.ts';
+import orgRouter from './routes/org.routes';
+import subthemeRouter from './routes/subtheme.routes';
+import db from './config/connectdb';
 import passport from 'passport';
-import { sessionMiddleware } from './config/sessions.ts';
+import { sessionMiddleware } from './config/sessions';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -31,18 +35,15 @@ connectDB();
 
 // General endpoints
 app.use('/auth', authRouter);
-
-// Get session value
-app.get('/get-session', (req, res) => {
-  console.log('Current session:', req.session);
-  res.json(req.session);
-});
+app.use('/users', userRouter);
+app.use('/events', eventRouter);
+app.use('/orgs', orgRouter);
+app.use('/subthemes', subthemeRouter);
 
 // Temporary base tester route
 app.use('/', function (req, res) {
   res.status(200).json('Hello World!');
 });
-
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
 });
