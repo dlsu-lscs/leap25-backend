@@ -9,6 +9,6 @@ const router = Router();
 
 router.get('/login/google', googleAuth());
 router.get('/redirect/google', googleAuthCallback());
-router.get('/google', authController);
+router.post('/google', authController);
 
 export default router;
