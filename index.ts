@@ -34,7 +34,7 @@ const connectDB = async (): Promise<void> => {
 connectDB();
 
 // General endpoints
-app.use('/oauth2', authRouter);
+app.use('/auth', authRouter);
 app.use('/users', userRouter);
 app.use('/events', eventRouter);
 app.use('/orgs', orgRouter);

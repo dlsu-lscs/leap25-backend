@@ -19,6 +19,12 @@ try {
       'express-session',
       'connect-redis',
       'redis',
+      'google-auth-library',
+      'child_process',
+      'fs',
+      'path',
+      'os',
+      'jsonwebtoken',
     ],
   });
   console.log('Build complete');
