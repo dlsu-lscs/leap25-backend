@@ -44,6 +44,7 @@ app.use('/subthemes', subthemeRouter);
 app.use('/', function (req, res) {
   res.status(200).json('Hello World!');
 });
+
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
 });
