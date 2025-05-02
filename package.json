@@ -44,6 +44,8 @@
   "homepage": "https://github.com/dlsu-lscs/leap25-backend#readme",
   "dependencies": {
     "connect-redis": "^8.0.3",
+    "contentful": "^11.5.18",
+    "contentful-management": "^11.52.2",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
