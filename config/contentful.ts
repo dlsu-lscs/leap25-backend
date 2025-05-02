@@ -1,6 +1,10 @@
-import { createClient } from 'contentful-management';
+import contentful from 'contentful-management';
 import type { Environment } from 'contentful-management';
 import 'dotenv/config';
+
+const { createClient } = contentful;
+
+console.log('token: ' + process.env.CONTENTFUL_ACCESS_TOKEN);
 
 export const client = createClient({
   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN as string,

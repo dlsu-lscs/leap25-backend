@@ -15,5 +15,7 @@ export async function getEventMedia(): Promise<
     content_type: 'eventMedia',
   });
 
+  console.log('meddiaa: ' + media);
+
   return media as Collection<Entry, EntryProps<KeyValueMap>>;
 }

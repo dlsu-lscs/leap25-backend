@@ -5,8 +5,6 @@ export const getEventMediaController = async function (
   req: Request,
   res: Response
 ): Promise<void> {
-  console.log(req.body);
-
   try {
     const media = await getEventMedia();
 
@@ -14,6 +12,10 @@ export const getEventMediaController = async function (
       res.status(404).json({ error: 'Media not found.' });
       return;
     }
+
+    console.log('media: ' + media);
+    res.status(200).json(media);
+    return;
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
     return;

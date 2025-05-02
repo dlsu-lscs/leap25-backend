@@ -19,6 +19,7 @@ try {
       'express-session',
       'connect-redis',
       'redis',
+      'contentful-management',
     ],
   });
   console.log('Build complete');
