@@ -10,13 +10,21 @@ import subthemeRouter from './routes/subtheme.routes';
 import db from './config/connectdb';
 import passport from 'passport';
 import { sessionMiddleware } from './config/sessions';
+import cors from 'cors';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(urlencoded({ extended: true }));
+
 app.use(json());
 app.use(sessionMiddleware);
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true,
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 
