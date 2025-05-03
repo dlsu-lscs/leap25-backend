@@ -4,9 +4,32 @@ import { RedisStore } from 'connect-redis';
 
 export const redisClient = createClient({
   url: process.env.REDIS_CONNECTION_URL,
+  socket: {
+    reconnectStrategy: (retries) => {
+      return Math.min(retries * 100, 10000); // 10 sec retry delay
+    },
+  },
 });
 
-await redisClient.connect();
+redisClient.on('error', (err) => {
+  console.error('Redis connection error:', err);
+});
+
+redisClient.on('connect', () => {
+  console.log('Connected to Redis successfully');
+});
+
+const connectRedis = async () => {
+  try {
+    await redisClient.connect();
+    console.log('Redis client connected');
+  } catch (error) {
+    console.error('Failed to connect to Redis:', error);
+    // Don't exit the process, let the app continue without Redis
+  }
+};
+
+connectRedis();
 
 const store = new RedisStore({
   client: redisClient,
