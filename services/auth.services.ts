@@ -1,8 +1,6 @@
-import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
-import type User from '../models/User';
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+import axios from 'axios';
+import type { User } from '../models/User';
 
 export async function googleAuth2(
   accessToken: string
@@ -10,13 +8,16 @@ export async function googleAuth2(
   if (!accessToken) return null;
 
   try {
-    const ticket = await client.verifyIdToken({
-      idToken: accessToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    const response = await axios.get(
+      'https://www.googleapis.com/oauth2/v3/userinfo',
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
 
-    const payload = ticket.getPayload();
-    if (!payload) throw new Error('Invalid token payload.');
+    const { data: payload } = response;
 
     const user = {
       google_id: payload.sub,
