@@ -20,6 +20,12 @@ try {
       'connect-redis',
       'redis',
       'contentful-management',
+      'google-auth-library',
+      'child_process',
+      'fs',
+      'path',
+      'os',
+      'jsonwebtoken',
     ],
   });
   console.log('Build complete');
