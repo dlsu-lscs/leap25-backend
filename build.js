@@ -24,6 +24,7 @@ try {
       'path',
       'os',
       'jsonwebtoken',
+      'axios',
     ],
   });
   console.log('Build complete');
