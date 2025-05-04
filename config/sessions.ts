@@ -19,7 +19,7 @@ redisClient.on('connect', () => {
   console.log('Connected to Redis successfully');
 });
 
-const connectRedis = async () => {
+const connectRedis = async (): Promise<void> => {
   try {
     await redisClient.connect();
     console.log('Redis client connected');
