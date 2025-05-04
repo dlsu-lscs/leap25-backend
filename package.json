@@ -43,6 +43,7 @@
   },
   "homepage": "https://github.com/dlsu-lscs/leap25-backend#readme",
   "dependencies": {
+    "axios": "^1.9.0",
     "connect-redis": "^8.0.3",
     "contentful": "^11.5.18",
     "contentful-management": "^11.52.2",

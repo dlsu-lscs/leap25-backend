@@ -13,7 +13,6 @@ export const getEventMediaController = async function (
       return;
     }
 
-    console.log('media: ' + media);
     res.status(200).json(media);
     return;
   } catch (error) {
