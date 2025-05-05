@@ -18,10 +18,13 @@ WORKDIR /app
 
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/migrations ./migrations
 
 RUN npm ci --omit=dev --ignore-scripts
 
-#default port for express/node
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD ["node", "dist/scripts/healthcheck.js"]
+
 EXPOSE 3000
 
 CMD ["node", "dist/index.js"]

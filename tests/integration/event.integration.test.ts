@@ -1,6 +1,8 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import * as EventService from '../../services/event.service';
-import db from '../../config/connectdb';
+import { getDB } from '../../config/database';
+
+const db = await getDB();
 
 describe('EventService Integration Tests', () => {
   let createdEventId: number;

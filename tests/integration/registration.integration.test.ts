@@ -2,7 +2,9 @@ import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import * as RegistrationService from '../../services/registration.service';
 import * as UserService from '../../services/user.service';
 import * as EventService from '../../services/event.service';
-import db from '../../config/connectdb';
+import { getDB } from '../../config/database';
+
+const db = await getDB();
 
 describe('Registration Integration Tests', () => {
   let userId: number;

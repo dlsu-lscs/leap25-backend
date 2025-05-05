@@ -1,7 +1,9 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import * as UserService from '../../services/user.service';
-import db from '../../config/connectdb';
+import { getDB } from '../../config/database';
 // import { db } from '../setup-mockdb.ts';
+
+const db = await getDB();
 
 describe('UserService Integration Tests', () => {
   let createdUserId: number;
