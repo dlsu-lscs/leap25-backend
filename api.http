@@ -2,7 +2,7 @@
 
 ### Global Variables
 @baseUrl = http://localhost:3000
-@userId = 5
+@userId = 7
 @eventId = 1
 
 ### Basic Health Check
@@ -24,8 +24,8 @@ POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-  "email": "test@example.com",
-  "name": "Test User",
+  "email": "toponeuniverse@example.com",
+  "name": "TopOne",
   "display_picture": "https://example.com/pic.jpg"
 }
 
@@ -58,12 +58,31 @@ Content-Type: application/json
 {
   "org_id": 1000,
   "title": "Workshop on Node.js",
+  "subtheme_id": 1000,
   "description": "Learn Node.js basics",
   "venue": "Online",
-  "schedule": "2023-12-30T10:00:00.000Z",
+  "schedule": "2023-12-30 10:00:00",
   "fee": 0,
   "code": "WORKSHOP101",
-  "max_slots": 50
+  "max_slots": 50,
+  "registered_slots": 0
+}
+
+### Create Event with all fields
+POST {{baseUrl}}/events
+Content-Type: application/json
+
+{
+  "org_id": 1,
+  "title": "Advanced Workshop on Node.js",
+  "description": "Learn advanced Node.js concepts",
+  "subtheme_id": 1,
+  "venue": "Online Room 2",
+  "schedule": "2023-12-31 14:00:00",
+  "fee": 10,
+  "code": "ADVWORKSHOP101",
+  "max_slots": 30,
+  "registered_slots": 0
 }
 
 ### Update Event
@@ -125,7 +144,7 @@ POST {{baseUrl}}/subthemes
 Content-Type: application/json
 
 {
-  "title": "Test Subtheme",
+  "title": "Test Subtheme7",
   "logo_pub_url": "https://example.com/logo.png",
   "background_pub_url": "https://example.com/bg.png"
 }
@@ -177,21 +196,22 @@ POST {{baseUrl}}/events
 Content-Type: application/json
 
 {
-  "org_id": 1,
+  "org_id": 999,
   "title": "Redis Test Event",
   "description": "Event for testing Redis slots functionality",
+  "subtheme_id": 1000,
   "venue": "Online",
-  "schedule": "2023-12-30T10:00:00.000Z",
+  "schedule": "2023-12-30 10:00:00",
   "fee": 0,
   "code": "REDISTEST",
   "max_slots": 10
 }
 
-### 2. Get the created event ID (run this after the above request)
-# Save the "id" value from the response and use it in subsequent requests
+### 2. Set the event ID variable after receiving the response
+@redisTestEventId = 5
 
 ### 3. Check Available Slots (should be 10 available)
-GET {{baseUrl}}/events/[EVENT_ID]/slots
+GET {{baseUrl}}/events/{{redisTestEventId}}/slots
 Accept: application/json
 
 ### 4. Register a user for the event
@@ -199,16 +219,16 @@ POST {{baseUrl}}/registrations
 Content-Type: application/json
 
 {
-  "user_id": 1,
-  "event_id": [EVENT_ID]
+  "user_id": 7,
+  "event_id": {{redisTestEventId}}
 }
 
 ### 5. Check Available Slots Again (should be 9 available)
-GET {{baseUrl}}/events/[EVENT_ID]/slots
+GET {{baseUrl}}/events/{{redisTestEventId}}/slots
 Accept: application/json
 
 ### 6. Update Event Max Slots
-PUT {{baseUrl}}/events/[EVENT_ID]
+PUT {{baseUrl}}/events/{{redisTestEventId}}
 Content-Type: application/json
 
 {
@@ -216,7 +236,7 @@ Content-Type: application/json
 }
 
 ### 7. Check Available Slots After Update (should be 19 available)
-GET {{baseUrl}}/events/[EVENT_ID]/slots
+GET {{baseUrl}}/events/{{redisTestEventId}}/slots
 Accept: application/json
 
 ### 8. Register multiple users in succession
@@ -226,8 +246,8 @@ POST {{baseUrl}}/registrations
 Content-Type: application/json
 
 {
-  "user_id": 2,
-  "event_id": [EVENT_ID]
+  "user_id": 5,
+  "event_id": {{redisTestEventId}}
 }
 
 #### -- Register user 3
@@ -235,14 +255,14 @@ POST {{baseUrl}}/registrations
 Content-Type: application/json
 
 {
-  "user_id": 3,
-  "event_id": [EVENT_ID]
+  "user_id": 8,
+  "event_id": {{redisTestEventId}}
 }
 
 ### 9. Final Slot Check (should be 17 available)
-GET {{baseUrl}}/events/[EVENT_ID]/slots
+GET {{baseUrl}}/events/{{redisTestEventId}}/slots
 Accept: application/json
 
 ### 10. Get Event Details to Verify Database Consistency
-GET {{baseUrl}}/events/[EVENT_ID]
+GET {{baseUrl}}/events/{{redisTestEventId}}
 Accept: application/json

@@ -1,76 +1,105 @@
-import express, { urlencoded, json } from 'express';
-import type { PoolConnection } from 'mysql2/promise';
+import express from 'express';
+import cors from 'cors';
+import passport from 'passport';
+import { urlencoded, json } from 'express';
 import 'dotenv/config';
+
+import { validateEnvironment } from './config/env';
+import { initDB, closeDB } from './config/database';
+import { initRedis, closeRedis } from './config/redis';
+import { configureSession } from './config/session';
+
 import userRouter from './routes/user.routes';
 import eventRouter from './routes/event.routes';
 import authRouter from './routes/auth.routes';
 import orgRouter from './routes/org.routes';
 import subthemeRouter from './routes/subtheme.routes';
 import registrationRouter from './routes/registration.routes';
-import db from './config/connectdb';
-import passport from 'passport';
-import { sessionMiddleware } from './config/sessions';
+
 import {
-  initializeRedisEventCache,
-  verifyAllEventSlotsConsistency,
-} from './services/event.service';
-import cors from 'cors';
+  initializeEventCache,
+  startConsistencyChecks,
+} from './services/caching';
+
+validateEnvironment();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(urlencoded({ extended: true }));
-
-app.use(json());
-app.use(sessionMiddleware);
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || '*',
-    credentials: true,
-  })
-);
-app.use(passport.initialize());
-app.use(passport.session());
-
-const connectDB = async (): Promise<void> => {
+const startServer = async (): Promise<void> => {
   try {
-    const connection: PoolConnection = await db.getConnection();
-    console.log(`Connected to database: ${process.env.DB_DATABASE}`);
-    connection.release();
-  } catch (err: any) {
-    console.error('Error connecting to DB:', err?.message || err);
-    process.exit(1);
-  }
-};
+    // init database first
+    await initDB();
+    console.log('Database initialized');
 
-connectDB()
-  .then(async () => {
-    // initial Redis event cache
-    await initializeRedisEventCache();
+    // then initialize Redis
+    await initRedis();
+    console.log('Redis initialized');
 
-    // periodic consistency check every 5 minutes
-    setInterval(verifyAllEventSlotsConsistency, 5 * 60 * 1000);
+    app.use(urlencoded({ extended: true }));
+    app.use(json());
+    app.use(
+      cors({
+        origin: process.env.CORS_ORIGIN || '*',
+        credentials: true,
+      })
+    );
+
+    // configure session
+    await configureSession(app);
+    console.log('Session configured');
+
+    // TODO: not needed i think?
+    app.use(passport.initialize());
+    app.use(passport.session());
+
+    // init event cache in Redis
+    await initializeEventCache();
+
+    // start periodic consistency checks
+    const consistencyTimer = startConsistencyChecks();
+
+    app.use('/auth', authRouter);
+    app.use('/users', userRouter);
+    app.use('/events', eventRouter);
+    app.use('/orgs', orgRouter);
+    app.use('/subthemes', subthemeRouter);
+    app.use('/registrations', registrationRouter);
+
+    app.get('/', (req, res) => {
+      res.status(200).json({ status: 'ok', message: 'Leap25 API is running' });
+    });
 
     app.listen(port, () => {
       console.log(`Server running on port: ${port}`);
     });
-  })
-  .catch((err) => {
-    console.error('Failed to start server:', err);
+
+    setupGracefulShutdown(consistencyTimer);
+  } catch (error) {
+    console.error('Failed to start server:', error);
     process.exit(1);
-  });
+  }
+};
 
-// General endpoints
-app.use('/auth', authRouter);
-app.use('/users', userRouter);
-app.use('/events', eventRouter);
-app.use('/orgs', orgRouter);
-app.use('/subthemes', subthemeRouter);
-app.use('/registrations', registrationRouter);
+const setupGracefulShutdown = (timer: NodeJS.Timeout): void => {
+  const shutdown = async () => {
+    console.log('Shutting down gracefully...');
 
-// Temporary base tester route
-app.use('/', function (req, res) {
-  res.status(200).json('Hello World!');
+    clearInterval(timer);
+    await closeRedis();
+    await closeDB();
+
+    console.log('All connections closed. Exiting process.');
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+};
+
+startServer().catch((err) => {
+  console.error('Fatal error during server initialization:', err);
+  process.exit(1);
 });
 
 export default app;

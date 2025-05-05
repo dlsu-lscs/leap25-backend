@@ -1,4 +1,4 @@
-import db from '../config/connectdb';
+import { getDB } from '../config/database';
 import 'dotenv/config';
 
 /**
@@ -6,6 +6,7 @@ import 'dotenv/config';
  */
 async function seedDatabase(): Promise<void> {
   console.log('Starting database seeding...');
+  const db = await getDB();
 
   const connection = await db.getConnection();
 

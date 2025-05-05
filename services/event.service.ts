@@ -1,9 +1,16 @@
 import mysql from 'mysql2/promise';
-import db from '../config/connectdb';
+import { getDB } from '../config/database';
 import type { Event, CreateEvent, UpdateEvent } from '../models/Event';
-import { redisClient, redisEventOps, REDIS_KEYS } from '../config/sessions';
+import {
+  getRedisClient,
+  redisEventOps,
+  isRedisReady,
+  REDIS_KEYS,
+} from '../config/redis';
 
 export async function createEvent(data: CreateEvent): Promise<Event> {
+  const db = await getDB();
+
   const {
     org_id,
     title,
@@ -28,6 +35,7 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
       schedule,
       fee,
       code,
+      registered_slots,
       max_slots,
     ]
   );
@@ -58,11 +66,15 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
 }
 
 export async function getAllEvents(): Promise<Event[]> {
+  const db = await getDB();
+
   const [rows] = await db.query('SELECT * FROM events');
   return rows as Event[];
 }
 
 export async function getEventById(id: number): Promise<Event | null> {
+  const db = await getDB();
+
   const [rows] = await db.query('SELECT * FROM events WHERE id = ?', [id]);
   const events = rows as Event[];
   return events[0] || null;
@@ -72,6 +84,8 @@ export async function updateEvent(
   id: number,
   data: UpdateEvent
 ): Promise<Event | null> {
+  const db = await getDB();
+
   const existingEvent = await getEventById(id);
   if (!existingEvent) return null;
 
@@ -128,30 +142,26 @@ export async function updateEvent(
 }
 
 export async function deleteEvent(id: number): Promise<void> {
+  const db = await getDB();
+
   await db.execute('DELETE FROM events WHERE id = ?', [id]);
 }
 
-/**
- * Get available slots for an event
- * @param eventId number
- * */
 export async function getEventAvailableSlots(
   eventId: number
 ): Promise<{ available: number; total: number } | null> {
   try {
-    // TODO: check first if event exists in db or in contentful(?)
-
     const cachedSlots = await redisEventOps.getEventSlots(eventId);
 
-    // get from event values from db for checking
+    // Get event values from db for checking
     const event = await getEventById(eventId);
     if (!event) return null;
 
-    // try to get from Redis first for better performance (cache hit) - check consistency on redis first
+    // Try to get from Redis first for better performance (cache hit)
     if (cachedSlots) {
       const dbAvailable = event.max_slots - event.registered_slots;
 
-      // if there's an inconsistency, update Redis with correct DB values
+      // If there's an inconsistency, update Redis with correct DB values
       if (
         cachedSlots.available !== dbAvailable ||
         cachedSlots.total !== event.max_slots
@@ -168,19 +178,19 @@ export async function getEventAvailableSlots(
       return cachedSlots;
     }
 
-    // if not in Redis, get from database (cache miss)
+    // If not in Redis, get from database (cache miss)
     const result = {
       available: event.max_slots - event.registered_slots,
       total: event.max_slots,
     };
 
-    // cache the result in Redis for 5 minutes
+    // Cache the result in Redis for 5 minutes
     await redisEventOps.setEventSlots(eventId, result, 300);
 
     return result;
   } catch (error) {
     console.error(`Error getting available slots for event ${eventId}:`, error);
-    // fallback to database if redis fails
+    // Fallback to database if redis fails
     try {
       const event = await getEventById(eventId);
       if (!event) return null;
@@ -196,9 +206,10 @@ export async function getEventAvailableSlots(
   }
 }
 
+// Additional functions
 export async function initializeRedisEventCache(): Promise<void> {
   try {
-    if (!redisClient.isReady) {
+    if (!isRedisReady()) {
       console.log('Redis not connected, skipping event cache initialization');
       return;
     }
@@ -210,8 +221,11 @@ export async function initializeRedisEventCache(): Promise<void> {
   }
 }
 
-// Verify and fix consistency for all events
 export async function verifyAllEventSlotsConsistency(): Promise<void> {
+  if (!isRedisReady()) {
+    return;
+  }
+
   try {
     const events = await getAllEvents();
     let fixed = 0;

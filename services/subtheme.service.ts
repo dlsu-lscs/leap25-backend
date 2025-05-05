@@ -1,5 +1,5 @@
 import mysql from 'mysql2/promise';
-import db from '../config/connectdb';
+import { getDB } from '../config/database';
 import type {
   Subtheme,
   CreateSubtheme,
@@ -7,6 +7,7 @@ import type {
 } from '../models/Subtheme';
 
 export async function createSubtheme(data: CreateSubtheme): Promise<Subtheme> {
+  const db = await getDB();
   const { title, logo_pub_url, background_pub_url } = data;
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
@@ -25,11 +26,13 @@ export async function createSubtheme(data: CreateSubtheme): Promise<Subtheme> {
 }
 
 export async function getAllSubthemes(): Promise<Subtheme[]> {
+  const db = await getDB();
   const [rows] = await db.query('SELECT * FROM subthemes');
   return rows as Subtheme[];
 }
 
 export async function getSubthemeById(id: number): Promise<Subtheme | null> {
+  const db = await getDB();
   const [rows] = await db.query('SELECT * FROM subthemes WHERE id = ?', [id]);
   const subthemes = rows as Subtheme[];
   return subthemes[0] || null;
@@ -47,7 +50,7 @@ export async function updateSubtheme(
     logo_pub_url = existing.logo_pub_url,
     background_pub_url = existing.background_pub_url,
   } = data;
-
+  const db = await getDB();
   await db.execute(
     'UPDATE subthemes SET title = ?, logo_pub_url = ?, background_pub_url = ? WHERE id = ?',
     [title, logo_pub_url, background_pub_url, id]
@@ -57,5 +60,6 @@ export async function updateSubtheme(
 }
 
 export async function deleteSubtheme(id: number): Promise<void> {
+  const db = await getDB();
   await db.execute('DELETE FROM subthemes WHERE id = ?', [id]);
 }

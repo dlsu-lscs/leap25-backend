@@ -1,12 +1,13 @@
 import mysql from 'mysql2/promise';
-import db from '../config/connectdb';
-import { redisClient, redisEventOps } from '../config/sessions';
+import { getDB } from '../config/database';
+import { redisEventOps } from '../config/redis';
 import type { Registration, CreateRegistration } from '../models/Registration';
 
 // Create a new registration
 export async function registerUserForEvent(
   data: CreateRegistration
 ): Promise<Registration | null> {
+  const db = await getDB();
   const connection = await db.getConnection();
 
   try {
@@ -43,7 +44,7 @@ export async function registerUserForEvent(
 
     // create registration to db
     const [result] = await connection.execute<mysql.ResultSetHeader>(
-      'INSERT INTO registrations (user_id, event_id, registration_date) VALUES (?, ?, NOW())',
+      'INSERT INTO registrations (user_id, event_id) VALUES (?, ?)',
       [data.user_id, data.event_id]
     );
 
@@ -62,7 +63,6 @@ export async function registerUserForEvent(
       id: result.insertId,
       user_id: data.user_id,
       event_id: data.event_id,
-      registration_date: new Date(),
     };
 
     return registration;
@@ -88,12 +88,12 @@ export async function getUserRegistrations(
   userId: number
 ): Promise<Array<Registration & { event_title: string }>> {
   try {
+    const db = await getDB();
     const [rows] = await db.query(
       `SELECT r.*, e.title as event_title
        FROM registrations r
        JOIN events e ON r.event_id = e.id
-       WHERE r.user_id = ?
-       ORDER BY r.registration_date DESC`,
+       WHERE r.user_id = ?`,
       [userId]
     );
 
