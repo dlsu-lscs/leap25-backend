@@ -75,3 +75,31 @@ export async function deleteEvent(
     next(error);
   }
 }
+
+export async function getEventSlots(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const eventId = Number(req.params.eventId);
+    const slots = await EventService.getEventAvailableSlots(eventId);
+
+    if (slots === null) {
+      res.status(404).json({ message: `No event found of id: ${eventId}` });
+      return;
+    }
+
+    if (!slots) {
+      res
+        .status(400)
+        .json({ message: `No slots found for the event ${eventId}.` });
+      return;
+    }
+
+    res.status(200).json(slots);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+}
