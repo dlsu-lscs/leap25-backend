@@ -1,6 +1,5 @@
 import express, { urlencoded, json } from 'express';
 import type { PoolConnection } from 'mysql2/promise';
-import './config/passport.ts';
 import 'dotenv/config';
 import userRouter from './routes/user.routes';
 import eventRouter from './routes/event.routes';
