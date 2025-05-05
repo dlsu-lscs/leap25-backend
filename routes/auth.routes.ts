@@ -2,7 +2,7 @@ import {
   googleAuth,
   googleAuthCallback,
   authController,
-} from '../controllers/auth.controller.ts';
+} from '../controllers/auth.controller';
 import { Router } from 'express';
 
 const router = Router();
