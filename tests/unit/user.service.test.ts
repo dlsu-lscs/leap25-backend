@@ -1,112 +1,188 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as UserService from '../../services/user.service';
-import db from '../../config/connectdb';
+import { getDB } from '../../config/database';
 
-// mock db
-vi.mock('../../config/connectdb', () => ({
-  default: {
-    execute: vi.fn(),
+// Mock the database
+vi.mock('../../config/database', () => ({
+  getDB: vi.fn().mockResolvedValue({
     query: vi.fn(),
-  },
+    execute: vi.fn(),
+  }),
 }));
 
-describe('UserService Unit Tests', () => {
-  beforeEach(() => {
+describe('UserService', () => {
+  let mockDb: any;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
+    mockDb = await getDB();
   });
 
-  it('should create a new user', async () => {
-    const mockUser = {
-      email: 'test@example.com',
-      name: 'Test User',
-      display_picture: '',
-    };
+  describe('createUser', () => {
+    it('should create a user successfully', async () => {
+      // Setup
+      const userData = {
+        email: 'test@example.com',
+        name: 'Test User',
+        display_picture: 'https://example.com/pic.jpg',
+      };
 
-    const mockResult = [{ insertId: 1 }];
-    (db.execute as any).mockResolvedValueOnce(mockResult);
+      mockDb.execute.mockResolvedValueOnce([{ insertId: 1 }]);
 
-    const result = await UserService.createUser(mockUser);
+      // Execute
+      const result = await UserService.createUser(userData);
 
-    expect(db.execute).toHaveBeenCalledWith(
-      'INSERT INTO users (email, display_picture, name, google_id) VALUES (?, ?, ?, ?)',
-      [mockUser.email, mockUser.display_picture, mockUser.name, null]
-    );
-    expect(result).toEqual({
-      id: 1,
-      ...mockUser,
-      google_id: undefined,
+      // Assert
+      expect(mockDb.execute).toHaveBeenCalledWith(
+        'INSERT INTO users (email, display_picture, name, google_id) VALUES (?, ?, ?, ?)',
+        [userData.email, userData.display_picture, userData.name, null]
+      );
+      expect(result).toEqual({
+        id: 1,
+        ...userData,
+        google_id: undefined, // null value in SQL == undefined in ts objects
+      });
+    });
+
+    it('should handle database errors', async () => {
+      // Setup
+      const userData = {
+        email: 'test@example.com',
+        name: 'Test User',
+      };
+
+      const error = new Error('Database error');
+      mockDb.execute.mockRejectedValueOnce(error);
+
+      // Execute & Assert
+      await expect(UserService.createUser(userData)).rejects.toThrow();
     });
   });
 
-  it('should get all users', async () => {
-    const mockUsers = [
-      { id: 1, email: 'user1@example.com', name: 'User 1' },
-      { id: 2, email: 'user2@example.com', name: 'User 2' },
-    ];
-    (db.query as any).mockResolvedValueOnce([mockUsers]);
+  describe('getAllUsers', () => {
+    it('should return all users', async () => {
+      // Setup
+      const mockUsers = [
+        { id: 1, email: 'user1@example.com', name: 'User 1' },
+        { id: 2, email: 'user2@example.com', name: 'User 2' },
+      ];
+      mockDb.query.mockResolvedValueOnce([mockUsers]);
 
-    const result = await UserService.getAllUsers();
+      // Execute
+      const result = await UserService.getAllUsers();
 
-    expect(db.query).toHaveBeenCalledWith('SELECT * FROM users');
-    expect(result).toEqual(mockUsers);
+      // Assert
+      expect(mockDb.query).toHaveBeenCalledWith('SELECT * FROM users');
+      expect(result).toEqual(mockUsers);
+    });
   });
 
-  it('should get user by id', async () => {
-    const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
-    (db.query as any).mockResolvedValueOnce([[mockUser]]);
+  describe('getUserById', () => {
+    it('should return user for valid id', async () => {
+      // Setup
+      const userId = 1;
+      const mockUser = {
+        id: userId,
+        email: 'test@example.com',
+        name: 'Test User',
+      };
 
-    const result = await UserService.getUserById(1);
+      mockDb.query.mockResolvedValueOnce([[mockUser]]);
 
-    expect(db.query).toHaveBeenCalledWith('SELECT * FROM users WHERE id = ?', [
-      1,
-    ]);
-    expect(result).toEqual(mockUser);
+      // Execute
+      const result = await UserService.getUserById(userId);
+
+      // Assert
+      expect(mockDb.query).toHaveBeenCalledWith(
+        'SELECT * FROM users WHERE id = ?',
+        [userId]
+      );
+      expect(result).toEqual(mockUser);
+    });
+
+    it('should return null for invalid user id', async () => {
+      // Setup
+      const userId = 999;
+      mockDb.query.mockResolvedValueOnce([[]]);
+
+      // Execute
+      const result = await UserService.getUserById(userId);
+
+      // Assert
+      expect(result).toBeNull();
+    });
   });
 
-  it('should return null if user not found', async () => {
-    (db.query as any).mockResolvedValueOnce([[]]);
+  describe('updateUser', () => {
+    it('should update a user successfully', async () => {
+      // Setup
+      const userId = 1;
+      const existingUser = {
+        id: userId,
+        email: 'test@example.com',
+        name: 'Test User',
+        display_picture: 'https://example.com/old.jpg',
+      };
 
-    const result = await UserService.getUserById(999);
+      const updateData = {
+        name: 'Updated Name',
+        display_picture: 'https://example.com/new.jpg',
+      };
 
-    expect(result).toBeNull();
+      // Mock the first getUserById call to get existing user
+      mockDb.query.mockResolvedValueOnce([[existingUser]]);
+      // Mock the execute call for update
+      mockDb.execute.mockResolvedValueOnce([{}]);
+      // Mock the second getUserById call to get updated user
+      mockDb.query.mockResolvedValueOnce([
+        [{ ...existingUser, ...updateData }],
+      ]);
+
+      // Execute
+      const result = await UserService.updateUser(userId, updateData);
+
+      // Assert
+      expect(mockDb.execute).toHaveBeenCalledWith(
+        'UPDATE users SET email = ?, display_picture = ?, name = ?, google_id = ? WHERE id = ?',
+        [
+          existingUser.email,
+          updateData.display_picture,
+          updateData.name,
+          null,
+          userId,
+        ]
+      );
+      expect(result).toEqual({ ...existingUser, ...updateData });
+    });
+
+    it('should return null when updating non-existent user', async () => {
+      // Setup
+      const userId = 999;
+      mockDb.query.mockResolvedValueOnce([[]]); // No user found
+
+      // Execute
+      const result = await UserService.updateUser(userId, { name: 'New Name' });
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockDb.execute).not.toHaveBeenCalled();
+    });
   });
 
-  it('should update a user', async () => {
-    const userId = 1;
-    const updateData = { name: 'Updated Name' };
-    const existingUser = {
-      id: userId,
-      email: 'test@example.com',
-      name: 'Old Name',
-      display_picture: null,
-      google_id: null,
-    };
-    const updatedUser = { ...existingUser, ...updateData };
+  describe('deleteUser', () => {
+    it('should delete a user', async () => {
+      // Setup
+      const userId = 1;
+      mockDb.execute.mockResolvedValueOnce([{}]);
 
-    // Mock getUserById call in updateUser
-    (db.query as any).mockResolvedValueOnce([[existingUser]]);
-    // Mock the update execute call
-    (db.execute as any).mockResolvedValueOnce([{}]);
-    // Mock the second getUserById call to return updated user
-    (db.query as any).mockResolvedValueOnce([[updatedUser]]);
+      // Execute
+      await UserService.deleteUser(userId);
 
-    const result = await UserService.updateUser(userId, updateData);
-
-    expect(db.execute).toHaveBeenCalledWith(
-      'UPDATE users SET email = ?, display_picture = ?, name = ?, google_id = ? WHERE id = ?',
-      [existingUser.email, null, updateData.name, null, userId]
-    );
-    expect(result).toEqual(updatedUser);
-  });
-
-  it('should delete a user', async () => {
-    const userId = 1;
-    (db.execute as any).mockResolvedValueOnce([{}]);
-
-    await UserService.deleteUser(userId);
-
-    expect(db.execute).toHaveBeenCalledWith('DELETE FROM users WHERE id = ?', [
-      userId,
-    ]);
+      // Assert
+      expect(mockDb.execute).toHaveBeenCalledWith(
+        'DELETE FROM users WHERE id = ?',
+        [userId]
+      );
+    });
   });
 });

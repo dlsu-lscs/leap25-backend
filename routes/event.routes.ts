@@ -9,4 +9,6 @@ router.get('/:id', eventController.getEventByID);
 router.put('/:id', eventController.updateEvent);
 router.delete('/:id', eventController.deleteEvent);
 
+router.get('/:eventId/slots', eventController.getEventSlots);
+
 export default router;

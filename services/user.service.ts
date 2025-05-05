@@ -1,8 +1,9 @@
 import mysql from 'mysql2/promise';
-import db from '../config/connectdb';
+import { getDB } from '../config/database';
 import type { User, CreateUser, UpdateUser } from '../models/User';
 
 export async function createUser(data: CreateUser): Promise<User> {
+  const db = await getDB();
   const { email, display_picture, name, google_id } = data;
   const [result] = await db.execute<mysql.ResultSetHeader>(
     'INSERT INTO users (email, display_picture, name, google_id) VALUES (?, ?, ?, ?)',
@@ -14,11 +15,13 @@ export async function createUser(data: CreateUser): Promise<User> {
 }
 
 export async function getAllUsers(): Promise<User[]> {
+  const db = await getDB();
   const [rows] = await db.query('SELECT * FROM users');
   return rows as User[];
 }
 
 export async function getUserById(id: number): Promise<User | null> {
+  const db = await getDB();
   const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
   const users = rows as User[];
   return users[0] || null;
@@ -37,7 +40,7 @@ export async function updateUser(
     name = existingUser.name,
     google_id = existingUser.google_id,
   } = data;
-
+  const db = await getDB();
   await db.execute(
     'UPDATE users SET email = ?, display_picture = ?, name = ?, google_id = ? WHERE id = ?',
     [email, display_picture ?? null, name, google_id ?? null, id]
@@ -47,5 +50,6 @@ export async function updateUser(
 }
 
 export async function deleteUser(id: number): Promise<void> {
+  const db = await getDB();
   await db.execute('DELETE FROM users WHERE id = ?', [id]);
 }
