@@ -1,0 +1,248 @@
+### REST API Tests for Leap25 Backend
+
+### Global Variables
+@baseUrl = http://localhost:3000
+@userId = 5
+@eventId = 1
+
+### Basic Health Check
+GET {{baseUrl}}
+Accept: application/json
+
+### Users Endpoints ###
+
+### Get All Users
+GET {{baseUrl}}/users
+Accept: application/json
+
+### Get User by ID
+GET {{baseUrl}}/users/{{userId}}
+Accept: application/json
+
+### Create User
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "name": "Test User",
+  "display_picture": "https://example.com/pic.jpg"
+}
+
+### Update User
+PUT {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+
+{
+  "name": "Updated User Name"
+}
+
+### Delete User
+DELETE {{baseUrl}}/users/{{userId}}
+Accept: application/json
+
+### Events Endpoints ###
+
+### Get All Events
+GET {{baseUrl}}/events
+Accept: application/json
+
+### Get Event by ID
+GET {{baseUrl}}/events/{{eventId}}
+Accept: application/json
+
+### Create Event
+POST {{baseUrl}}/events
+Content-Type: application/json
+
+{
+  "org_id": 1000,
+  "title": "Workshop on Node.js",
+  "description": "Learn Node.js basics",
+  "venue": "Online",
+  "schedule": "2023-12-30T10:00:00.000Z",
+  "fee": 0,
+  "code": "WORKSHOP101",
+  "max_slots": 50
+}
+
+### Update Event
+PUT {{baseUrl}}/events/{{eventId}}
+Content-Type: application/json
+
+{
+  "title": "Updated Workshop Title",
+  "venue": "Room 101"
+}
+
+### Delete Event
+DELETE {{baseUrl}}/events/{{eventId}}
+Accept: application/json
+
+### Organizations Endpoints ###
+
+### Get All Organizations
+GET {{baseUrl}}/orgs
+Accept: application/json
+
+### Get Organization by ID
+GET {{baseUrl}}/orgs/1
+Accept: application/json
+
+### Create Organization
+POST {{baseUrl}}/orgs
+Content-Type: application/json
+
+{
+  "name": "Test Organization",
+  "org_logo": "https://example.com/logo.png"
+}
+
+### Update Organization
+PUT {{baseUrl}}/orgs/1
+Content-Type: application/json
+
+{
+  "name": "Updated Organization Name"
+}
+
+### Delete Organization
+DELETE {{baseUrl}}/orgs/1
+Accept: application/json
+
+### Subthemes Endpoints ###
+
+### Get All Subthemes
+GET {{baseUrl}}/subthemes
+Accept: application/json
+
+### Get Subtheme by ID
+GET {{baseUrl}}/subthemes/1
+Accept: application/json
+
+### Create Subtheme
+POST {{baseUrl}}/subthemes
+Content-Type: application/json
+
+{
+  "title": "Test Subtheme",
+  "logo_pub_url": "https://example.com/logo.png",
+  "background_pub_url": "https://example.com/bg.png"
+}
+
+### Update Subtheme
+PUT {{baseUrl}}/subthemes/1
+Content-Type: application/json
+
+{
+  "title": "Updated Subtheme Name"
+}
+
+### Delete Subtheme
+DELETE {{baseUrl}}/subthemes/1
+Accept: application/json
+
+### Authentication Endpoints ###
+
+### Google Auth Token
+POST {{baseUrl}}/auth/google
+Content-Type: application/json
+
+{
+  "token": "your-google-access-token"
+}
+
+### Get Event Available Slots
+GET {{baseUrl}}/events/{{eventId}}/slots
+Accept: application/json
+
+### Register User for an Event
+POST {{baseUrl}}/registrations
+Content-Type: application/json
+
+{
+  "user_id": {{userId}},
+  "event_id": {{eventId}}
+}
+
+### Get User Registrations
+GET {{baseUrl}}/users/{{userId}}/registrations
+Accept: application/json
+
+
+### Redis Event Slots Test Plan
+
+### 1. Create a Test Event
+POST {{baseUrl}}/events
+Content-Type: application/json
+
+{
+  "org_id": 1,
+  "title": "Redis Test Event",
+  "description": "Event for testing Redis slots functionality",
+  "venue": "Online",
+  "schedule": "2023-12-30T10:00:00.000Z",
+  "fee": 0,
+  "code": "REDISTEST",
+  "max_slots": 10
+}
+
+### 2. Get the created event ID (run this after the above request)
+# Save the "id" value from the response and use it in subsequent requests
+
+### 3. Check Available Slots (should be 10 available)
+GET {{baseUrl}}/events/[EVENT_ID]/slots
+Accept: application/json
+
+### 4. Register a user for the event
+POST {{baseUrl}}/registrations
+Content-Type: application/json
+
+{
+  "user_id": 1,
+  "event_id": [EVENT_ID]
+}
+
+### 5. Check Available Slots Again (should be 9 available)
+GET {{baseUrl}}/events/[EVENT_ID]/slots
+Accept: application/json
+
+### 6. Update Event Max Slots
+PUT {{baseUrl}}/events/[EVENT_ID]
+Content-Type: application/json
+
+{
+  "max_slots": 20
+}
+
+### 7. Check Available Slots After Update (should be 19 available)
+GET {{baseUrl}}/events/[EVENT_ID]/slots
+Accept: application/json
+
+### 8. Register multiple users in succession
+
+#### -- Register user 2
+POST {{baseUrl}}/registrations
+Content-Type: application/json
+
+{
+  "user_id": 2,
+  "event_id": [EVENT_ID]
+}
+
+#### -- Register user 3
+POST {{baseUrl}}/registrations
+Content-Type: application/json
+
+{
+  "user_id": 3,
+  "event_id": [EVENT_ID]
+}
+
+### 9. Final Slot Check (should be 17 available)
+GET {{baseUrl}}/events/[EVENT_ID]/slots
+Accept: application/json
+
+### 10. Get Event Details to Verify Database Consistency
+GET {{baseUrl}}/events/[EVENT_ID]
+Accept: application/json
