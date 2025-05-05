@@ -31,7 +31,7 @@ describe('UserService Integration Tests', () => {
     expect(user.name).toBe(testUser.name);
     expect(user.display_picture).toBe(testUser.display_picture);
 
-    createdUserId = user.id;
+    createdUserId = Number(user.id);
   });
 
   it('should get all users', async () => {

@@ -1,0 +1,108 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as EventService from '../../services/event.service';
+import { redisClient } from '../../config/sessions';
+import db from '../../config/connectdb';
+
+// Mock the database
+vi.mock('../../config/connectdb', () => ({
+  default: {
+    query: vi.fn(),
+  },
+}));
+
+// Mock Redis client
+vi.mock('../../config/sessions', () => ({
+  redisClient: {
+    get: vi.fn(),
+    setEx: vi.fn(),
+  },
+}));
+
+describe('Event Slots Service', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('getEventAvailableSlots', () => {
+    it('should return slots from cache if available', async () => {
+      // Setup
+      const eventId = 1;
+      const cachedSlots = { available: 5, total: 10 };
+
+      (redisClient.get as any).mockResolvedValueOnce(
+        JSON.stringify(cachedSlots)
+      );
+
+      // Execute
+      const result = await EventService.getEventAvailableSlots(eventId);
+
+      // Assert
+      expect(redisClient.get).toHaveBeenCalledWith(`event:${eventId}:slots`);
+      expect(result).toEqual(cachedSlots);
+      expect(db.query).not.toHaveBeenCalled(); // Database should not be called
+    });
+
+    it('should fetch slots from database if not in cache', async () => {
+      // Setup
+      const eventId = 1;
+      const mockEvent = {
+        id: eventId,
+        max_slots: 10,
+        registered_slots: 3,
+        title: 'Test Event',
+      };
+
+      // Cache miss
+      (redisClient.get as any).mockResolvedValueOnce(null);
+
+      // Mock database response
+      (db.query as any).mockResolvedValueOnce([[mockEvent]]);
+
+      // Execute
+      const result = await EventService.getEventAvailableSlots(eventId);
+
+      // Assert
+      expect(redisClient.get).toHaveBeenCalledWith(`event:${eventId}:slots`);
+      expect(db.query).toHaveBeenCalledWith(
+        'SELECT * FROM events WHERE id = ?',
+        [eventId]
+      );
+      expect(redisClient.setEx).toHaveBeenCalledWith(
+        `event:${eventId}:slots`,
+        300,
+        JSON.stringify({ available: 7, total: 10 })
+      );
+      expect(result).toEqual({ available: 7, total: 10 });
+    });
+
+    it('should return null if event does not exist', async () => {
+      // Setup
+      const eventId = 999;
+
+      // Cache miss
+      (redisClient.get as any).mockResolvedValueOnce(null);
+
+      // No event found in database
+      (db.query as any).mockResolvedValueOnce([[]]);
+
+      // Execute
+      const result = await EventService.getEventAvailableSlots(eventId);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('should handle errors properly', async () => {
+      // Setup
+      const eventId = 1;
+      const error = new Error('Redis error');
+
+      (redisClient.get as any).mockRejectedValueOnce(error);
+
+      // Execute & Assert
+      await expect(
+        EventService.getEventAvailableSlots(eventId)
+      ).rejects.toThrow();
+    });
+  });
+});
