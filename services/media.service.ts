@@ -25,14 +25,14 @@ export async function createEventMedia(
     if (events.length === 0)
       throw new Error(`Event not found with contentful_id = ${eventRef}`);
 
-    const event_id = events[0]?.contentful_id;
+    const event_id = events[0]?.id;
 
     if (!pub_url || !event_id) {
       throw new Error('Error in getting publication asset.');
     }
 
     const [result] = await db.execute<mysql.ResultSetHeader>(
-      'INSERT INTO event_media (pub_url, pub_type, event_id) VALUES (?, ?, ?, ?)',
+      'INSERT INTO event_pubs (pub_url, pub_type, event_id) VALUES (?, ?, ?)',
       [pub_url ?? null, pub_type, event_id]
     );
 

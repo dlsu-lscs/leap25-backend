@@ -7,11 +7,24 @@ import eventRouter from './routes/event.routes';
 import authRouter from './routes/auth.routes';
 import orgRouter from './routes/org.routes';
 import subthemeRouter from './routes/subtheme.routes';
+import mediaRouter from './routes/media.routes';
 import db from './config/connectdb';
 import passport from 'passport';
 import { sessionMiddleware } from './config/sessions';
 import cors from 'cors';
 
+/*
+Webhook tester using Smee
+
+import SmeeClient from 'smee-client';
+const smee = new SmeeClient({
+  source: 'https://smee.io/hwM6of7BTKdhC7HY',
+  target: 'http://localhost:3000/media/event',
+  logger: console, // Optional: logs events
+});
+
+const events = smee.start();
+*/
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -47,6 +60,7 @@ app.use('/users', userRouter);
 app.use('/events', eventRouter);
 app.use('/orgs', orgRouter);
 app.use('/subthemes', subthemeRouter);
+app.use('/media', mediaRouter);
 
 // Temporary base tester route
 app.use('/', function (req, res) {

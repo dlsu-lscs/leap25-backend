@@ -3,6 +3,6 @@ import { createEventMediaController } from 'controllers/media.controller';
 
 const router = Router();
 
-router.post('/event/media', createEventMediaController);
+router.post('/event', createEventMediaController);
 
-export const mediaRouter = router;
+export default router;

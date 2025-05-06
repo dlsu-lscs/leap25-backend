@@ -7,7 +7,7 @@ export const createEventMediaController = async function (
 ): Promise<void> {
   try {
     const data = req.body;
-    const new_event_pub = createEventMedia(data);
+    const new_event_pub = await createEventMedia(data);
 
     if (!new_event_pub) {
       throw new Error('Error in creating a new event publication.');

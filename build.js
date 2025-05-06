@@ -26,6 +26,9 @@ try {
       'path',
       'os',
       'jsonwebtoken',
+      'axios',
+      'qs',
+      'smee-client',
     ],
   });
   console.log('Build complete');

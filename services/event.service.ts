@@ -1,6 +1,7 @@
 import mysql from 'mysql2/promise';
 import db from '../config/connectdb';
 import type { Event, CreateEvent, UpdateEvent } from '../models/Event';
+import type { EventMedia } from '../models/EventMedia';
 
 export async function createEvent(data: CreateEvent): Promise<Event> {
   const {
@@ -100,4 +101,14 @@ export async function updateEvent(
 
 export async function deleteEvent(id: number): Promise<void> {
   await db.execute('DELETE FROM events WHERE id = ?', [id]);
+}
+
+export async function getEventMedia(id: number): Promise<EventMedia | null> {
+  const [result] = await db.query(
+    'SELECT * FROM event_pubs WHERE event_id = ?',
+    [id]
+  );
+  const media = result as EventMedia[];
+
+  return media[0] || null;
 }

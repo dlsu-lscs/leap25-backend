@@ -57,7 +57,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "punycode": "^2.3.1",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "smee-client": "^3.1.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
