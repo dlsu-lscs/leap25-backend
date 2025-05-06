@@ -5,9 +5,18 @@
 @userId = 7
 @eventId = 1
 
-### Basic Health Check
+### Basic Server Ping
 GET {{baseUrl}}
 Accept: application/json
+
+### Healthchecks - readiness
+GET {{baseUrl}}/health/ready
+Accept: application/json
+
+### Healthchecks - liveliness
+GET {{baseUrl}}/health/live
+Accept: application/json
+
 
 ### Users Endpoints ###
 
