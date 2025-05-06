@@ -2,9 +2,10 @@
 name: Test Workflow
 
 on:
+  push:
+    branches: [main, staging]
   pull_request:
-    branches:
-      - main
+    branches: [main, staging]
 
 jobs:
   test:
