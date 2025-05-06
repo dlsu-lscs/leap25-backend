@@ -1,19 +1,19 @@
-import { getEventMedia } from '../services/media.service';
+import { createEventMedia } from '../services/media.service';
 import type { Request, Response } from 'express';
 
-export const getEventMediaController = async function (
+export const createEventMediaController = async function (
   req: Request,
   res: Response
 ): Promise<void> {
   try {
-    const media = await getEventMedia();
+    const data = req.body;
+    const new_event_pub = createEventMedia(data);
 
-    if (!media) {
-      res.status(404).json({ error: 'Media not found.' });
-      return;
+    if (!new_event_pub) {
+      throw new Error('Error in creating a new event publication.');
     }
 
-    res.status(200).json(media);
+    res.status(201).json(new_event_pub);
     return;
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
