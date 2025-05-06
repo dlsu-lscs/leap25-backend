@@ -14,8 +14,6 @@ import { sessionMiddleware } from './config/sessions';
 import cors from 'cors';
 
 /*
-Webhook tester using Smee
-
 import SmeeClient from 'smee-client';
 const smee = new SmeeClient({
   source: 'https://smee.io/hwM6of7BTKdhC7HY',
@@ -25,6 +23,7 @@ const smee = new SmeeClient({
 
 const events = smee.start();
 */
+
 const app = express();
 const port = process.env.PORT || 3000;
 

@@ -42,6 +42,43 @@ export async function createOrg(
   }
 }
 
+export async function createOrgContentful(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const payload = req.body;
+
+    if (
+      payload.sys.type === 'Entry' &&
+      payload.sys.environment.sys.id === 'master' &&
+      payload.sys.contentType.sys.id === 'org'
+    ) {
+      const fields = payload.fields;
+
+      const org = {
+        name: fields.name?.['en-US'],
+        org_logo: fields.org_logo?.['en-US'],
+      };
+
+      if (!org.name || !org.org_logo) {
+        res
+          .status(400)
+          .json({ error: 'Missing required organization fields.' });
+        return;
+      }
+
+      const newOrg = await OrgService.createOrg(org);
+      res.status(201).json(newOrg);
+    } else {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+    }
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function updateOrg(
   req: Request,
   res: Response,

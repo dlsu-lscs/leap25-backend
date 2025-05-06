@@ -44,6 +44,37 @@ export async function createSubtheme(
   }
 }
 
+export async function createSubthemeContentful(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const payload = req.body;
+
+    if (
+      payload.sys.type === 'Entry' &&
+      payload.sys.environment.sys.id === 'master' &&
+      payload.sys.contentType.sys.id === 'subtheme'
+    ) {
+      const fields = payload.fields;
+
+      const subtheme = {
+        title: fields.title?.['en-US'],
+        logo_pub_url: fields.logo_pub_url?.['en-US'],
+        background_pub_url: fields.background_pub_url?.['en-US'],
+      };
+
+      const newSubtheme = await SubthemeService.createSubtheme(subtheme);
+      res.status(201).json(newSubtheme);
+    } else {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+    }
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function updateSubtheme(
   req: Request,
   res: Response,
