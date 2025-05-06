@@ -15,6 +15,7 @@ import authRouter from './routes/auth.routes';
 import orgRouter from './routes/org.routes';
 import subthemeRouter from './routes/subtheme.routes';
 import registrationRouter from './routes/registration.routes';
+import healthRouter from './routes/health.routes';
 
 import {
   initializeEventCache,
@@ -65,9 +66,14 @@ const startServer = async (): Promise<void> => {
     app.use('/orgs', orgRouter);
     app.use('/subthemes', subthemeRouter);
     app.use('/registrations', registrationRouter);
+    app.use('/health', healthRouter);
 
     app.get('/', (req, res) => {
-      res.status(200).json({ status: 'ok', message: 'Leap25 API is running' });
+      res.status(200).json({
+        status: 'ok',
+        message:
+          'Leap25 API is running, use /health/ready and /health/live endpoints for proper healthchecks.',
+      });
     });
 
     app.listen(port, () => {
