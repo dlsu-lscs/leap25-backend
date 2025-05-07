@@ -80,6 +80,20 @@ export async function getEventById(id: number): Promise<Event | null> {
   return events[0] || null;
 }
 
+export async function getEventBySubtheme(
+  subtheme: string
+): Promise<Event[] | null> {
+  const db = await getDB();
+
+  const [rows] = await db.query(
+    'SELECT e.* FROM events e INNER JOIN subthemes s ON e.subtheme_id = s.id WHERE s.title = ?',
+    [subtheme]
+  );
+
+  const events = rows as Event[];
+  return events.length > 0 ? events : null;
+}
+
 export async function updateEvent(
   id: number,
   data: UpdateEvent

@@ -31,6 +31,32 @@ export async function getEventByID(
   }
 }
 
+export async function getEventBySubtheme(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { subtheme } = req.body;
+
+    if (!subtheme) {
+      res.status(400).json({ message: 'Subtheme title is required' });
+      return;
+    }
+
+    const event = await EventService.getEventBySubtheme(String(subtheme));
+    if (event) {
+      res.status(200).json(event);
+    } else {
+      console.log('Event not found');
+      res.status(404).json({ message: 'Event not found' });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+}
+
 export async function createEvent(
   req: Request,
   res: Response,
