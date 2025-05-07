@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import { getImageUrlById } from '../services/contentful.service';
 import * as OrgService from '../services/org.service';
 
 export async function getAllOrgs(
@@ -44,8 +45,7 @@ export async function createOrg(
 
 export async function createOrgContentful(
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ): Promise<void> {
   try {
     const payload = req.body;
@@ -57,25 +57,30 @@ export async function createOrgContentful(
     ) {
       const fields = payload.fields;
 
+      const org_logo = await getImageUrlById(fields.org_logo?.['en-US'].sys.id);
+
       const org = {
-        name: fields.name?.['en-US'],
-        org_logo: fields.org_logo?.['en-US'],
+        name: fields.org_name?.['en-US'],
+        org_logo,
       };
 
-      if (!org.name || !org.org_logo) {
+      console.log(org);
+
+      if (!org.name || !org_logo) {
         res
           .status(400)
           .json({ error: 'Missing required organization fields.' });
         return;
       }
 
-      const newOrg = await OrgService.createOrg(org);
+      const newOrg = await OrgService.createOrg(org as any);
       res.status(201).json(newOrg);
     } else {
       res.status(400).json({ error: 'Invalid payload or content type.' });
     }
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: (error as Error).message });
+    return;
   }
 }
 

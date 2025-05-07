@@ -10,6 +10,7 @@ export interface Event {
   code: string;
   registered_slots: number;
   max_slots: number;
+  contentful_id: string;
 }
 
 export interface CreateEvent {
@@ -23,6 +24,7 @@ export interface CreateEvent {
   code: string;
   registered_slots?: number;
   max_slots: number;
+  contentful_id: string;
 }
 
 export interface UpdateEvent {

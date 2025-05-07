@@ -7,11 +7,11 @@ import type {
 } from '../models/Subtheme';
 
 export async function createSubtheme(data: CreateSubtheme): Promise<Subtheme> {
-  const { title, logo_pub_url, background_pub_url } = data;
+  const { title, logo_pub_url, background_pub_url, contentful_id } = data;
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO subthemes (title, logo_pub_url, background_pub_url) VALUES (?, ?, ?)',
-    [title, logo_pub_url, background_pub_url]
+    'INSERT INTO subthemes (title, logo_pub_url, background_pub_url, contentful_id) VALUES (?, ?, ?, ?)',
+    [title, logo_pub_url, background_pub_url, contentful_id]
   );
 
   const insertId = result.insertId;
@@ -21,6 +21,7 @@ export async function createSubtheme(data: CreateSubtheme): Promise<Subtheme> {
     title,
     logo_pub_url,
     background_pub_url,
+    contentful_id,
   };
 }
 

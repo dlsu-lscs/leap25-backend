@@ -1,4 +1,5 @@
 import { getContentfulEnv } from 'config/contentful';
+import type { CreateOrg } from '../models/Org';
 
 export async function getImageUrlById(id: string): Promise<string | null> {
   const client = await getContentfulEnv();
@@ -19,17 +20,23 @@ export async function getImageUrlById(id: string): Promise<string | null> {
   }
 }
 
-export async function getOrgId(id: string): Promise<string | null> {
+export async function getOrg(id: string): Promise<CreateOrg | null> {
   const client = await getContentfulEnv();
   try {
     const org = await client.getEntry(id);
-    const org_id = org.fields.name?.['en-US'];
+    const name = org.fields.org_name['en-US'];
+    const org_logo = org.fields.org_logo['en-US'];
 
-    if (!org_id) {
+    if (!org) {
       throw new Error('Organization not found.');
     }
 
-    return org_id;
+    const fetched_org = {
+      name,
+      org_logo,
+    };
+
+    return fetched_org;
   } catch (error) {
     console.error(
       'Error fetching Contentful asset: ',

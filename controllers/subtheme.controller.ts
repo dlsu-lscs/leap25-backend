@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import { getImageUrlById } from '../services/contentful.service';
 import * as SubthemeService from '../services/subtheme.service';
 
 export async function getAllSubthemes(
@@ -46,8 +47,7 @@ export async function createSubtheme(
 
 export async function createSubthemeContentful(
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ): Promise<void> {
   try {
     const payload = req.body;
@@ -59,19 +59,31 @@ export async function createSubthemeContentful(
     ) {
       const fields = payload.fields;
 
+      const logo_pub_url = await getImageUrlById(
+        fields.logoPub?.['en-US'].sys.id
+      );
+
+      const background_pub_url = await getImageUrlById(
+        fields.backgroundPub?.['en-US'].sys.id
+      );
+
+      const contentful_id = payload.sys.id;
+
       const subtheme = {
         title: fields.title?.['en-US'],
-        logo_pub_url: fields.logo_pub_url?.['en-US'],
-        background_pub_url: fields.background_pub_url?.['en-US'],
+        logo_pub_url,
+        background_pub_url,
+        contentful_id,
       };
 
-      const newSubtheme = await SubthemeService.createSubtheme(subtheme);
+      const newSubtheme = await SubthemeService.createSubtheme(subtheme as any);
       res.status(201).json(newSubtheme);
     } else {
       res.status(400).json({ error: 'Invalid payload or content type.' });
     }
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: (error as Error).message });
+    return;
   }
 }
 
