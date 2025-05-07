@@ -1,9 +1,13 @@
 export interface EventMedia {
-  pub_one_file?: string;
-  pub_url?: string;
-  pub_multiple_file?: string[];
+  pub_url: string;
   pub_type: string;
   event_id: string;
+  contentful_id: string;
+}
+
+export interface UpdateEventMedia {
+  pub_url: string;
+  pub_type: string;
 }
 
 export type EventMediaPayload = {

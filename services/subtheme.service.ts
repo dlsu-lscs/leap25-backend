@@ -87,6 +87,50 @@ export async function updateSubtheme(
   return getSubthemeById(id);
 }
 
+export async function updateSubthemePayload(
+  payload: any
+): Promise<UpdateSubtheme | null> {
+  const fields = payload.fields;
+
+  const logo_pub_url_id = fields.logoPub?.['en-US']?.sys?.id;
+  const logo_pub_url = logo_pub_url_id
+    ? await getImageUrlById(logo_pub_url_id)
+    : null;
+
+  const background_pub_url_id = fields.backgroundPub?.['en-US']?.sys?.id;
+  const background_pub_url = background_pub_url_id
+    ? await getImageUrlById(background_pub_url_id)
+    : null;
+
+  const title = fields.title?.['en-US'];
+  const contentful_id = payload.sys.id;
+
+  if (!contentful_id) return null;
+
+  const [subthemes] = (await db.execute(
+    'SELECT id FROM subthemes WHERE contentful_id = ?',
+    [contentful_id]
+  )) as any[];
+
+  if (subthemes.length === 0) {
+    return null;
+  }
+
+  const subtheme_id = subthemes[0].id;
+
+  const existing = await getSubthemeById(subtheme_id);
+  if (!existing) return null;
+
+  const updated_subtheme: UpdateSubtheme = {
+    title: title || existing.title,
+    logo_pub_url: logo_pub_url || existing.logo_pub_url,
+    background_pub_url: background_pub_url || existing.background_pub_url,
+    contentful_id,
+  };
+
+  return await updateSubtheme(subtheme_id, updated_subtheme);
+}
+
 export async function deleteSubtheme(id: number): Promise<void> {
   await db.execute('DELETE FROM subthemes WHERE id = ?', [id]);
 }

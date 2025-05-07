@@ -25,8 +25,6 @@ export async function createOrg(data: CreateOrg): Promise<Org> {
 export async function createOrgPayload(payload: any): Promise<Org | null> {
   const fields = payload.fields;
 
-  console.log('check');
-
   const org_logo_id = fields.org_logo?.['en-US']?.sys?.id;
   const org_logo = org_logo_id ? await getImageUrlById(org_logo_id) : null;
   const name = fields.org_name?.['en-US'];

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as OrgService from '../services/org.service';
+import 'dotenv/config';
 
 export async function getAllOrgs(
   req: Request,
@@ -71,6 +72,13 @@ export async function updateOrgContentful(
   res: Response
 ): Promise<void> {
   try {
+    const secret = req.headers['contentful-webhook-secret'];
+
+    if (secret != process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
+      return;
+    }
+
     const payload = req.body;
 
     if (

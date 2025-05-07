@@ -56,7 +56,6 @@ export async function createEventPayload(
   payload: any
 ): Promise<CreateEvent | null> {
   const fields = payload.fields;
-  console.log(fields);
   const org_id = fields.orgId['en-US'].sys.id;
 
   const org = await getOrg(org_id);
@@ -65,36 +64,34 @@ export async function createEventPayload(
     return null;
   }
   const contentful_id = org.contentful_id;
-  const [orgs] = await db.query('SELECT id FROM orgs WHERE contentful_id = ?', [
-    contentful_id,
-  ]);
+  const [orgs] = (await db.query(
+    'SELECT id FROM orgs WHERE contentful_id = ?',
+    [contentful_id]
+  )) as any[];
 
-  console.log(orgs, contentful_id);
-
-  if ((orgs as any[]).length === 0) {
+  if (orgs.length === 0) {
     return null;
   }
 
   const subtheme_id = fields.subthemeId['en-US'].sys.id;
 
-  const [subthemes] = await db.query(
+  const [subthemes] = (await db.query(
     'SELECT id FROM subthemes WHERE contentful_id = ?',
     [subtheme_id]
-  );
+  )) as any[];
 
-  if ((subthemes as any[]).length === 0) {
+  if (subthemes.length === 0) {
     return null;
   }
-  console.log('check3');
 
   const available_slots = fields.availableSlots?.['en-US'];
   const max_slots = fields.maxSlots?.['en-US'];
 
   const event = {
-    org_id: (orgs as any[])[0].id,
+    org_id: orgs[0].id,
     title: fields.title?.['en-US'],
     description: fields.description?.['en-US'],
-    subtheme_id: (subthemes as any[])[0].id,
+    subtheme_id: subthemes[0].id,
     venue: fields.venue?.['en-US'],
     schedule: new Date(fields.schedule?.['en-US']),
     fee: fields.fee?.['en-US'],
@@ -156,6 +153,57 @@ export async function updateEvent(
   );
 
   return getEventById(id);
+}
+
+export async function updateEventPayload(payload: any): Promise<Event | null> {
+  const fields = payload.fields;
+  const org_id = fields.orgId['en-US'].sys.id;
+
+  const org = await getOrg(org_id);
+  if (!org) return null;
+
+  const contentful_id = payload.sys.id;
+
+  const [orgs] = (await db.query(
+    'SELECT id FROM orgs WHERE contentful_id = ?',
+    [org.contentful_id]
+  )) as any[];
+
+  if (orgs.length === 0) return null;
+
+  const subtheme_id = fields.subthemeId['en-US'].sys.id;
+
+  const [subthemes] = (await db.query(
+    'SELECT id FROM subthemes WHERE contentful_id = ?',
+    [subtheme_id]
+  )) as any[];
+
+  if (subthemes.length === 0) return null;
+
+  const available_slots = fields.availableSlots?.['en-US'];
+  const max_slots = fields.maxSlots?.['en-US'];
+
+  const updatedData: UpdateEvent = {
+    org_id: orgs[0].id,
+    title: fields.title?.['en-US'],
+    description: fields.description?.['en-US'],
+    subtheme_id: subthemes[0].id,
+    venue: fields.venue?.['en-US'],
+    schedule: new Date(fields.schedule?.['en-US']),
+    fee: fields.fee?.['en-US'],
+    code: fields.code?.['en-US'],
+    registered_slots: max_slots - available_slots,
+    max_slots: max_slots,
+  };
+
+  const [events] = (await db.query(
+    'SELECT id FROM events WHERE contentful_id = ?',
+    [contentful_id]
+  )) as any[];
+
+  if (events.length === 0) return null;
+
+  return await updateEvent(events[0].id, updatedData);
 }
 
 export async function deleteEvent(id: number): Promise<void> {

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as EventService from '../services/event.service';
+import 'dotenv/config';
 
 export async function getAllEvents(
   req: Request,
@@ -50,6 +51,13 @@ export async function createEventContentful(
   res: Response
 ): Promise<void> {
   try {
+    const secret = req.headers['contentful-webhook-secret'];
+
+    if (secret != process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
+      return;
+    }
+
     const payload = req.body;
 
     if (
@@ -84,6 +92,43 @@ export async function updateEvent(
   } catch (error) {
     console.log(error);
     next(error);
+  }
+}
+
+export async function updateEventContentful(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const secret = req.headers['contentful-webhook-secret'];
+
+    if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
+      return;
+    }
+
+    const payload = req.body;
+
+    if (
+      payload.sys.type === 'Entry' &&
+      payload.sys.environment.sys.id === 'master' &&
+      payload.sys.contentType.sys.id === 'events'
+    ) {
+      const updatedEvent = await EventService.updateEventPayload(payload);
+
+      if (!updatedEvent) {
+        res
+          .status(404)
+          .json({ message: 'Event not found or invalid payload.' });
+        return;
+      }
+
+      res.status(200).json(updatedEvent);
+    } else {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
   }
 }
 
