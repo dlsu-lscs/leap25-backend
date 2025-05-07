@@ -65,7 +65,7 @@ export async function createOrgContentful(
     return;
   }
 }
-/*
+
 export async function updateOrgContentful(
   req: Request,
   res: Response
@@ -78,30 +78,24 @@ export async function updateOrgContentful(
       payload.sys.environment.sys.id === 'master' &&
       payload.sys.contentType.sys.id === 'org'
     ) {
-      const org = {
-        name: fields.org_name?.['en-US'],
-        org_logo,
-        contentful_id: payload.sys.id,
-      };
+      const updated_org = await OrgService.updateOrgPayload(payload as any);
 
-      if (!org.name || !org_logo) {
-        res
-          .status(400)
-          .json({ error: 'Missing required organization fields.' });
+      if (!updated_org) {
+        res.status(404).json({
+          error: 'Organization not found or missing required fields.',
+        });
         return;
       }
 
-      const newOrg = await OrgService.createOrg(org as any);
-      res.status(201).json(newOrg);
+      res.status(200).json(updated_org);
     } else {
       res.status(400).json({ error: 'Invalid payload or content type.' });
     }
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
-    return;
   }
 }
-*/
+
 export async function updateOrg(
   req: Request,
   res: Response,

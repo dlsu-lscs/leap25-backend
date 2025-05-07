@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 import db from '../config/connectdb';
+import { getOrg } from './contentful.service';
 import type { Org, CreateOrg, UpdateOrg } from '../models/Org';
 import { getImageUrlById } from './contentful.service';
 
@@ -70,6 +71,40 @@ export async function updateOrg(
   ]);
 
   return getOrgById(id);
+}
+
+export async function updateOrgPayload(
+  payload: any
+): Promise<UpdateOrg | null> {
+  const fields = payload.fields;
+
+  const org_logo_id = fields.org_logo?.['en-US']?.sys?.id;
+  const org_logo = org_logo_id ? await getImageUrlById(org_logo_id) : null;
+  const name = fields.org_name?.['en-US'];
+  const contentful_id = payload.sys.id;
+
+  if (!contentful_id) return null;
+
+  const existing_org = await getOrg(contentful_id);
+  if (!existing_org) return null;
+
+  const updated_org: UpdateOrg = {
+    name: name || existing_org.name,
+    org_logo: org_logo || existing_org.org_logo,
+  };
+
+  const [orgs] = (await db.execute(
+    'SELECT id FROM orgs WHERE contentful_id = ?',
+    [contentful_id]
+  )) as any[];
+
+  if (orgs.length === 0) {
+    return null;
+  }
+
+  const updated_org_id = orgs[0].id;
+
+  return await updateOrg(updated_org_id, updated_org);
 }
 
 export async function deleteOrg(id: number): Promise<void> {
