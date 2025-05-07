@@ -1,7 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import db from '../config/connectdb';
 import * as EventService from '../services/event.service';
-import { getOrg } from '../services/contentful.service';
 
 export async function getAllEvents(
   req: Request,
@@ -59,59 +57,7 @@ export async function createEventContentful(
       payload.sys.environment.sys.id === 'master' &&
       payload.sys.contentType.sys.id === 'events'
     ) {
-      const fields = payload.fields;
-      const org_id = fields.orgId['en-US'].sys.id;
-
-      const org = await getOrg(org_id);
-
-      if (!org) {
-        res.status(404).json({ error: 'Organization not found.' });
-        return;
-      }
-      const name = org.name;
-      const [orgs] = await db.query('SELECT id FROM orgs WHERE name = ?', [
-        name,
-      ]);
-
-      if ((orgs as any[]).length === 0) {
-        res.status(404).json({ error: 'Organization not found (name).' });
-        return;
-      }
-
-      const subtheme_id = fields.subthemeId['en-US'].sys.id;
-
-      const [subthemes] = await db.query(
-        'SELECT id FROM subthemes WHERE contentful_id = ?',
-        [subtheme_id]
-      );
-
-      if ((subthemes as any[]).length === 0) {
-        res
-          .status(404)
-          .json({ error: 'Subtheme not found (contentful_id mismatch).' });
-        return;
-      }
-
-      const available_slots = fields.availableSlots?.['en-US'];
-      const max_slots = fields.maxSlots?.['en-US'];
-
-      const event = {
-        org_id: (orgs as any[])[0].id,
-        title: fields.title?.['en-US'],
-        description: fields.description?.['en-US'],
-        subtheme_id: (subthemes as any[])[0].id,
-        venue: fields.venue?.['en-US'],
-        schedule: new Date(fields.schedule?.['en-US']),
-        fee: fields.fee?.['en-US'],
-        code: fields.code?.['en-US'],
-        registered_slots: max_slots - available_slots,
-        max_slots: max_slots,
-        contentful_id: payload.sys.id,
-      };
-
-      const new_event = await EventService.createEvent(event);
-
-      console.log(new_event);
+      const new_event = await EventService.createEventPayload(payload);
 
       res.status(201).json(new_event);
     } else {

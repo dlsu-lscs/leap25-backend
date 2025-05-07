@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import { getImageUrlById } from '../services/contentful.service';
 import * as OrgService from '../services/org.service';
 
 export async function getAllOrgs(
@@ -55,16 +54,35 @@ export async function createOrgContentful(
       payload.sys.environment.sys.id === 'master' &&
       payload.sys.contentType.sys.id === 'org'
     ) {
-      const fields = payload.fields;
+      const newOrg = await OrgService.createOrgPayload(payload as any);
+      res.status(201).json(newOrg);
+    } else {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+      return;
+    }
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+    return;
+  }
+}
+/*
+export async function updateOrgContentful(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const payload = req.body;
 
-      const org_logo = await getImageUrlById(fields.org_logo?.['en-US'].sys.id);
-
+    if (
+      payload.sys.type === 'Entry' &&
+      payload.sys.environment.sys.id === 'master' &&
+      payload.sys.contentType.sys.id === 'org'
+    ) {
       const org = {
         name: fields.org_name?.['en-US'],
         org_logo,
+        contentful_id: payload.sys.id,
       };
-
-      console.log(org);
 
       if (!org.name || !org_logo) {
         res
@@ -83,7 +101,7 @@ export async function createOrgContentful(
     return;
   }
 }
-
+*/
 export async function updateOrg(
   req: Request,
   res: Response,

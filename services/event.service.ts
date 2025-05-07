@@ -2,6 +2,7 @@ import mysql from 'mysql2/promise';
 import db from '../config/connectdb';
 import type { Event, CreateEvent, UpdateEvent } from '../models/Event';
 import type { EventMedia } from '../models/EventMedia';
+import { getOrg } from './contentful.service';
 
 export async function createEvent(data: CreateEvent): Promise<Event> {
   const {
@@ -15,9 +16,10 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
     code,
     registered_slots,
     max_slots,
+    contentful_id,
   } = data;
   const [result] = await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       org_id,
       title,
@@ -29,6 +31,7 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
       code,
       registered_slots,
       max_slots,
+      contentful_id,
     ]
   );
 
@@ -45,7 +48,63 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
     code,
     registered_slots: registered_slots ?? 0,
     max_slots,
+    contentful_id,
   };
+}
+
+export async function createEventPayload(
+  payload: any
+): Promise<CreateEvent | null> {
+  const fields = payload.fields;
+  console.log(fields);
+  const org_id = fields.orgId['en-US'].sys.id;
+
+  const org = await getOrg(org_id);
+
+  if (!org) {
+    return null;
+  }
+  const contentful_id = org.contentful_id;
+  const [orgs] = await db.query('SELECT id FROM orgs WHERE contentful_id = ?', [
+    contentful_id,
+  ]);
+
+  console.log(orgs, contentful_id);
+
+  if ((orgs as any[]).length === 0) {
+    return null;
+  }
+
+  const subtheme_id = fields.subthemeId['en-US'].sys.id;
+
+  const [subthemes] = await db.query(
+    'SELECT id FROM subthemes WHERE contentful_id = ?',
+    [subtheme_id]
+  );
+
+  if ((subthemes as any[]).length === 0) {
+    return null;
+  }
+  console.log('check3');
+
+  const available_slots = fields.availableSlots?.['en-US'];
+  const max_slots = fields.maxSlots?.['en-US'];
+
+  const event = {
+    org_id: (orgs as any[])[0].id,
+    title: fields.title?.['en-US'],
+    description: fields.description?.['en-US'],
+    subtheme_id: (subthemes as any[])[0].id,
+    venue: fields.venue?.['en-US'],
+    schedule: new Date(fields.schedule?.['en-US']),
+    fee: fields.fee?.['en-US'],
+    code: fields.code?.['en-US'],
+    registered_slots: max_slots - available_slots,
+    max_slots: max_slots,
+    contentful_id: payload.sys.id,
+  };
+
+  return await createEvent(event);
 }
 
 export async function getAllEvents(): Promise<Event[]> {

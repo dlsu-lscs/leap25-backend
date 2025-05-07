@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import { getImageUrlById } from '../services/contentful.service';
 import * as SubthemeService from '../services/subtheme.service';
 
 export async function getAllSubthemes(
@@ -57,26 +56,7 @@ export async function createSubthemeContentful(
       payload.sys.environment.sys.id === 'master' &&
       payload.sys.contentType.sys.id === 'subtheme'
     ) {
-      const fields = payload.fields;
-
-      const logo_pub_url = await getImageUrlById(
-        fields.logoPub?.['en-US'].sys.id
-      );
-
-      const background_pub_url = await getImageUrlById(
-        fields.backgroundPub?.['en-US'].sys.id
-      );
-
-      const contentful_id = payload.sys.id;
-
-      const subtheme = {
-        title: fields.title?.['en-US'],
-        logo_pub_url,
-        background_pub_url,
-        contentful_id,
-      };
-
-      const newSubtheme = await SubthemeService.createSubtheme(subtheme as any);
+      const newSubtheme = await SubthemeService.createSubthemePayload(payload);
       res.status(201).json(newSubtheme);
     } else {
       res.status(400).json({ error: 'Invalid payload or content type.' });

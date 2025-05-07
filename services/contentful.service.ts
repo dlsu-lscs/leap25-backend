@@ -26,6 +26,7 @@ export async function getOrg(id: string): Promise<CreateOrg | null> {
     const org = await client.getEntry(id);
     const name = org.fields.org_name['en-US'];
     const org_logo = org.fields.org_logo['en-US'];
+    const contentful_id = org.sys.id;
 
     if (!org) {
       throw new Error('Organization not found.');
@@ -34,6 +35,7 @@ export async function getOrg(id: string): Promise<CreateOrg | null> {
     const fetched_org = {
       name,
       org_logo,
+      contentful_id,
     };
 
     return fetched_org;

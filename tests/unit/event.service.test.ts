@@ -29,6 +29,7 @@ describe('EventService Unit Tests', () => {
       code: 'CODE123',
       registered_slots: 0,
       max_slots: 50,
+      contentful_id: 'abc123',
     };
 
     const mockResult = [{ insertId: 1 }];
@@ -40,7 +41,7 @@ describe('EventService Unit Tests', () => {
     // Assert
 
     expect(db.execute).toHaveBeenCalledWith(
-      'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         mockEvent.org_id ?? null,
         mockEvent.title ?? null,
@@ -52,6 +53,7 @@ describe('EventService Unit Tests', () => {
         mockEvent.code ?? null,
         mockEvent.registered_slots ?? null,
         mockEvent.max_slots ?? null,
+        mockEvent.contentful_id ?? null,
       ]
     );
 

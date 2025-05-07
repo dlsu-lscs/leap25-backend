@@ -1,13 +1,14 @@
 import mysql from 'mysql2/promise';
 import db from '../config/connectdb';
 import type { Org, CreateOrg, UpdateOrg } from '../models/Org';
+import { getImageUrlById } from './contentful.service';
 
 export async function createOrg(data: CreateOrg): Promise<Org> {
-  const { name, org_logo } = data;
+  const { name, org_logo, contentful_id } = data;
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO orgs (name, org_logo) VALUES (?, ?)',
-    [name, org_logo]
+    'INSERT INTO orgs (name, org_logo, contentful_id) VALUES (?, ?, ?)',
+    [name, org_logo, contentful_id]
   );
 
   const insertId = result.insertId;
@@ -16,7 +17,30 @@ export async function createOrg(data: CreateOrg): Promise<Org> {
     id: insertId,
     name,
     org_logo,
+    contentful_id,
   };
+}
+
+export async function createOrgPayload(payload: any): Promise<Org | null> {
+  const fields = payload.fields;
+
+  console.log('check');
+
+  const org_logo_id = fields.org_logo?.['en-US']?.sys?.id;
+  const org_logo = org_logo_id ? await getImageUrlById(org_logo_id) : null;
+  const name = fields.org_name?.['en-US'];
+
+  if (!name || !org_logo) {
+    return null;
+  }
+
+  const org = {
+    name,
+    org_logo,
+    contentful_id: payload.sys.id,
+  };
+
+  return await createOrg(org as any);
 }
 
 export async function getAllOrgs(): Promise<Org[]> {
