@@ -32,6 +32,42 @@ export async function getSubthemeById(
   }
 }
 
+export async function handleSubthemeContentfulWebhook(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const secret = req.headers['contentful-webhook-secret'];
+
+    if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
+      return;
+    }
+
+    const payload = req.body;
+
+    const isValid =
+      payload?.sys?.type === 'Entry' &&
+      payload?.sys?.environment?.sys?.id === 'master' &&
+      payload?.sys?.contentType?.sys?.id === 'subtheme';
+
+    if (!isValid) {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+      return;
+    }
+
+    const subtheme = await SubthemeService.handleContentfulWebhook(payload);
+
+    if (!subtheme) {
+      res.status(500).json({ error: 'Error when updating/creating subtheme.' });
+    }
+
+    res.status(subtheme.is_created ? 201 : 200).json(subtheme.subtheme);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export async function createSubtheme(
   req: Request,
   res: Response,
@@ -42,36 +78,6 @@ export async function createSubtheme(
     res.status(201).json(newSubtheme);
   } catch (error) {
     next(error);
-  }
-}
-
-export async function createSubthemeContentful(
-  req: Request,
-  res: Response
-): Promise<void> {
-  try {
-    const secret = req.headers['contentful-webhook-secret'];
-
-    if (secret != process.env.CONTENTFUL_WEBHOOK_SECRET) {
-      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
-      return;
-    }
-
-    const payload = req.body;
-
-    if (
-      payload.sys.type === 'Entry' &&
-      payload.sys.environment.sys.id === 'master' &&
-      payload.sys.contentType.sys.id === 'subtheme'
-    ) {
-      const newSubtheme = await SubthemeService.createSubthemePayload(payload);
-      res.status(201).json(newSubtheme);
-    } else {
-      res.status(400).json({ error: 'Invalid payload or content type.' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-    return;
   }
 }
 
@@ -88,44 +94,6 @@ export async function updateSubtheme(
     res.status(200).json(updatedSubtheme);
   } catch (error) {
     next(error);
-  }
-}
-
-export async function updateSubthemeContentful(
-  req: Request,
-  res: Response
-): Promise<void> {
-  try {
-    const secret = req.headers['contentful-webhook-secret'];
-
-    if (secret != process.env.CONTENTFUL_WEBHOOK_SECRET) {
-      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
-      return;
-    }
-
-    const payload = req.body;
-
-    if (
-      payload.sys.type === 'Entry' &&
-      payload.sys.environment.sys.id === 'master' &&
-      payload.sys.contentType.sys.id === 'subtheme'
-    ) {
-      const updated_subtheme =
-        await SubthemeService.updateSubthemePayload(payload);
-
-      if (!updated_subtheme) {
-        res.status(404).json({
-          error: 'Subtheme not found or missing required fields.',
-        });
-        return;
-      }
-
-      res.status(200).json(updated_subtheme);
-    } else {
-      res.status(400).json({ error: 'Invalid payload or content type.' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
   }
 }
 

@@ -116,3 +116,23 @@ export async function updateEventMediaContentful(
     return null;
   }
 }
+
+export async function handleContentfulWebhook(payload: any): Promise<{
+  eventMedia: EventMedia | UpdateEventMedia | null;
+  is_created: boolean;
+}> {
+  const contentful_id = payload.sys.id;
+
+  const [rows] = await db.execute(
+    'SELECT contentful_id FROM event_pubs WHERE contentful_id = ?',
+    [contentful_id]
+  );
+
+  const is_exists: boolean = (rows as any[]).length > 0;
+
+  const eventMedia = is_exists
+    ? await updateEventMediaContentful(payload)
+    : await createEventMediaContentful(payload);
+
+  return { eventMedia, is_created: !is_exists };
+}

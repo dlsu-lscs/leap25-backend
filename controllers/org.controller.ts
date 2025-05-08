@@ -43,67 +43,6 @@ export async function createOrg(
   }
 }
 
-export async function createOrgContentful(
-  req: Request,
-  res: Response
-): Promise<void> {
-  try {
-    const payload = req.body;
-
-    if (
-      payload.sys.type === 'Entry' &&
-      payload.sys.environment.sys.id === 'master' &&
-      payload.sys.contentType.sys.id === 'org'
-    ) {
-      const newOrg = await OrgService.createOrgPayload(payload as any);
-      res.status(201).json(newOrg);
-    } else {
-      res.status(400).json({ error: 'Invalid payload or content type.' });
-      return;
-    }
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-    return;
-  }
-}
-
-export async function updateOrgContentful(
-  req: Request,
-  res: Response
-): Promise<void> {
-  try {
-    const secret = req.headers['contentful-webhook-secret'];
-
-    if (secret != process.env.CONTENTFUL_WEBHOOK_SECRET) {
-      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
-      return;
-    }
-
-    const payload = req.body;
-
-    if (
-      payload.sys.type === 'Entry' &&
-      payload.sys.environment.sys.id === 'master' &&
-      payload.sys.contentType.sys.id === 'org'
-    ) {
-      const updated_org = await OrgService.updateOrgPayload(payload as any);
-
-      if (!updated_org) {
-        res.status(404).json({
-          error: 'Organization not found or missing required fields.',
-        });
-        return;
-      }
-
-      res.status(200).json(updated_org);
-    } else {
-      res.status(400).json({ error: 'Invalid payload or content type.' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-}
-
 export async function updateOrg(
   req: Request,
   res: Response,
@@ -130,5 +69,42 @@ export async function deleteOrg(
     res.status(204).send();
   } catch (error) {
     next(error);
+  }
+}
+
+export async function handleOrgContentfulWebhook(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const secret = req.headers['contentful-webhook-secret'];
+
+    if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
+      return;
+    }
+
+    const payload = req.body;
+
+    const isValid =
+      payload?.sys?.type === 'Entry' &&
+      payload?.sys?.environment?.sys?.id === 'master' &&
+      payload?.sys?.contentType?.sys?.id === 'org';
+
+    if (!isValid) {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+      return;
+    }
+
+    const result = await OrgService.handleContentfulWebhook(payload);
+
+    if (!result.org) {
+      res.status(500).json({ error: 'Error when updating/creating org.' });
+      return;
+    }
+
+    res.status(result.is_created ? 201 : 200).json(result.org);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
   }
 }

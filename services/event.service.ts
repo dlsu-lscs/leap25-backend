@@ -160,7 +160,9 @@ export async function updateEventPayload(payload: any): Promise<Event | null> {
   const org_id = fields.orgId['en-US'].sys.id;
 
   const org = await getOrg(org_id);
-  if (!org) return null;
+  if (!org) {
+    throw new Error('Org not found in Contentful.');
+  }
 
   const contentful_id = payload.sys.id;
 
@@ -218,4 +220,24 @@ export async function getEventMedia(id: number): Promise<EventMedia | null> {
   const media = result as EventMedia[];
 
   return media[0] || null;
+}
+
+export async function handleContentfulWebhook(payload: any): Promise<{
+  event: Event | UpdateEvent | null;
+  is_created: boolean;
+}> {
+  const contentful_id = payload.sys.id;
+
+  const [events] = (await db.execute(
+    'SELECT contentful_id FROM events WHERE contentful_id = ?',
+    [contentful_id]
+  )) as any[];
+
+  const is_exists: boolean = events.length > 0;
+
+  const event = is_exists
+    ? await updateEventPayload(payload)
+    : await createEventPayload(payload);
+
+  return { event, is_created: !is_exists };
 }

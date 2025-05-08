@@ -165,3 +165,40 @@ export const getEventMedia = async function (
     return;
   }
 };
+
+export async function handleEventContentfulWebhook(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const secret = req.headers['contentful-webhook-secret'];
+
+    if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
+      return;
+    }
+
+    const payload = req.body;
+
+    const isValid =
+      payload?.sys?.type === 'Entry' &&
+      payload?.sys?.environment?.sys?.id === 'master' &&
+      payload?.sys?.contentType?.sys?.id === 'events';
+
+    if (!isValid) {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+      return;
+    }
+
+    const result = await EventService.handleContentfulWebhook(payload);
+
+    if (!result.event) {
+      res.status(500).json({ error: 'Error when updating/creating event.' });
+      return;
+    }
+
+    res.status(result.is_created ? 201 : 200).json(result.event);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}

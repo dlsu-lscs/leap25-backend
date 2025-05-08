@@ -1,48 +1,41 @@
-import {
-  createEventMediaContentful,
-  updateEventMediaContentful,
-} from '../services/media.service';
+import { handleContentfulWebhook } from '../services/media.service';
 import type { Request, Response } from 'express';
 
-export const createEventMediaController = async function (
+export async function handleEventMediaContentfulWebhook(
   req: Request,
   res: Response
 ): Promise<void> {
   try {
-    const payload = req.body;
-    const new_event_pub = await createEventMediaContentful(payload);
+    const secret = req.headers['contentful-webhook-secret'];
 
-    if (!new_event_pub) {
-      throw new Error('Error in creating a new event publication.');
-    }
-
-    res.status(201).json(new_event_pub);
-    return;
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-    return;
-  }
-};
-
-export const updateEventMediaController = async function (
-  req: Request,
-  res: Response
-): Promise<void> {
-  try {
-    const payload = req.body;
-
-    const updatedMedia = await updateEventMediaContentful(payload);
-
-    if (!updatedMedia) {
-      res
-        .status(404)
-        .json({ error: 'Event media not found or update failed.' });
+    if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook URL.' });
       return;
     }
 
-    res.status(200).json(updatedMedia);
+    const payload = req.body;
+
+    const isValid =
+      payload?.sys?.type === 'Entry' &&
+      payload?.sys?.environment?.sys?.id === 'master' &&
+      payload?.sys?.contentType?.sys?.id === 'eventPub';
+
+    if (!isValid) {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+      return;
+    }
+
+    const result = await handleContentfulWebhook(payload);
+
+    if (!result.eventMedia) {
+      res
+        .status(500)
+        .json({ error: 'Error when updating/creating event media.' });
+      return;
+    }
+
+    res.status(result.is_created ? 200 : 201).json(result.eventMedia);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
-    return;
   }
-};
+}

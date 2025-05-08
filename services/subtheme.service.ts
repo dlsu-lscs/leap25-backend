@@ -134,3 +134,23 @@ export async function updateSubthemePayload(
 export async function deleteSubtheme(id: number): Promise<void> {
   await db.execute('DELETE FROM subthemes WHERE id = ?', [id]);
 }
+
+export async function handleContentfulWebhook(payload: any): Promise<{
+  subtheme: Subtheme | UpdateSubtheme | null;
+  is_created: boolean;
+}> {
+  const contentful_id = payload.sys.id;
+
+  const [subthemes] = (await db.execute(
+    'SELECT contentful_id FROM subthemes WHERE contentful_id = ?',
+    [contentful_id]
+  )) as any[];
+
+  const is_exists: boolean = subthemes.length > 0;
+
+  const subtheme = is_exists
+    ? await updateSubthemePayload(payload)
+    : await createSubthemePayload(payload);
+
+  return { subtheme, is_created: is_exists };
+}

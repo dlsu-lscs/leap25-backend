@@ -4,8 +4,7 @@ import * as orgController from '../controllers/org.controller';
 const router = Router();
 
 router.post('/', orgController.createOrg);
-router.post('/contentful', orgController.createOrgContentful);
-router.put('/contentful', orgController.updateOrgContentful);
+router.post('/contentful', orgController.handleOrgContentfulWebhook);
 router.get('/', orgController.getAllOrgs);
 router.get('/:id', orgController.getOrgById);
 router.put('/:id', orgController.updateOrg);

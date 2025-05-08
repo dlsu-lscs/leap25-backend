@@ -108,3 +108,23 @@ export async function updateOrgPayload(
 export async function deleteOrg(id: number): Promise<void> {
   await db.execute('DELETE FROM orgs WHERE id = ?', [id]);
 }
+
+export async function handleContentfulWebhook(payload: any): Promise<{
+  org: Org | UpdateOrg | null;
+  is_created: boolean;
+}> {
+  const contentful_id = payload.sys.id;
+
+  const [orgs] = (await db.execute(
+    'SELECT contentful_id FROM orgs WHERE contentful_id = ?',
+    [contentful_id]
+  )) as any[];
+
+  const is_exists: boolean = orgs.length > 0;
+
+  const org = is_exists
+    ? await updateOrgPayload(payload)
+    : await createOrgPayload(payload);
+
+  return { org, is_created: !is_exists };
+}
