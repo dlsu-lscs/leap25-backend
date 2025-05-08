@@ -108,3 +108,44 @@ export async function handleOrgContentfulWebhook(
     res.status(500).json({ error: (error as Error).message });
   }
 }
+
+export async function deleteOrgContentful(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const secret = req.headers['contentful-webhook-secret'];
+
+    if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
+      return;
+    }
+
+    const payload = req.body;
+
+    const isValid =
+      payload?.sys?.type === 'Entry' &&
+      payload?.sys?.environment?.sys?.id === 'master' &&
+      payload?.sys?.contentType?.sys?.id === 'org';
+
+    if (!isValid) {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+      return;
+    }
+
+    const deletedOrg = await OrgService.deleteOrgContentful(payload);
+
+    if (deletedOrg) {
+      res
+        .status(500)
+        .json({ error: 'Failure to delete org through contentful' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Org deleted.' });
+  } catch (error) {
+    res.status(500).json({
+      error: (error as Error).message,
+    });
+  }
+}

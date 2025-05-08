@@ -66,6 +66,16 @@ export async function getSubthemeById(id: number): Promise<Subtheme | null> {
   return subthemes[0] || null;
 }
 
+export async function getSubthemeByContentfulId(
+  id: string
+): Promise<Subtheme | null> {
+  const [subthemes] = (await db.query(
+    'SELECT * FROM subthemes WHERE contentful_id = ?',
+    [id]
+  )) as any;
+  return subthemes[0] || null;
+}
+
 export async function updateSubtheme(
   id: number,
   data: UpdateSubtheme
@@ -105,30 +115,20 @@ export async function updateSubthemePayload(
   const title = fields.title?.['en-US'];
   const contentful_id = payload.sys.id;
 
-  if (!contentful_id) return null;
+  if (!contentful_id) throw new Error('Lacking contentful id in payload');
 
-  const [subthemes] = (await db.execute(
-    'SELECT id FROM subthemes WHERE contentful_id = ?',
-    [contentful_id]
-  )) as any[];
+  const subtheme = await getSubthemeByContentfulId(contentful_id);
 
-  if (subthemes.length === 0) {
-    return null;
-  }
-
-  const subtheme_id = subthemes[0].id;
-
-  const existing = await getSubthemeById(subtheme_id);
-  if (!existing) return null;
+  if (!subtheme) throw new Error('No subtheme found with given contentful id');
 
   const updated_subtheme: UpdateSubtheme = {
-    title: title || existing.title,
-    logo_pub_url: logo_pub_url || existing.logo_pub_url,
-    background_pub_url: background_pub_url || existing.background_pub_url,
+    title: title || subtheme.title,
+    logo_pub_url: logo_pub_url || subtheme.logo_pub_url,
+    background_pub_url: background_pub_url || subtheme.background_pub_url,
     contentful_id,
   };
 
-  return await updateSubtheme(subtheme_id, updated_subtheme);
+  return await updateSubtheme(subtheme.id, updated_subtheme);
 }
 
 export async function deleteSubtheme(id: number): Promise<void> {
@@ -141,16 +141,31 @@ export async function handleContentfulWebhook(payload: any): Promise<{
 }> {
   const contentful_id = payload.sys.id;
 
-  const [subthemes] = (await db.execute(
-    'SELECT contentful_id FROM subthemes WHERE contentful_id = ?',
-    [contentful_id]
-  )) as any[];
+  const existing_subtheme = getSubthemeByContentfulId(contentful_id);
 
-  const is_exists: boolean = subthemes.length > 0;
+  const is_exists: boolean = !!existing_subtheme;
 
   const subtheme = is_exists
     ? await updateSubthemePayload(payload)
     : await createSubthemePayload(payload);
 
   return { subtheme, is_created: is_exists };
+}
+
+export async function deleteSubthemeContentful(
+  payload: any
+): Promise<Subtheme | null> {
+  const contentful_id = payload.sys.id;
+
+  const subtheme = await getSubthemeByContentfulId(contentful_id);
+
+  if (!subtheme) {
+    throw new Error('Subtheme not found in database using contentful id.');
+  }
+
+  await deleteSubtheme(subtheme.id);
+
+  const deleted_subtheme = getSubthemeById(subtheme.id);
+
+  return deleted_subtheme;
 }

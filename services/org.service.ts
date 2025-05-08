@@ -128,3 +128,28 @@ export async function handleContentfulWebhook(payload: any): Promise<{
 
   return { org, is_created: !is_exists };
 }
+
+export async function getOrgByContentfulId(
+  contentful_id: string
+): Promise<Org | null> {
+  const [orgs] = await db.query('SELECT * FROM orgs WHERE contentful_id = ?', [
+    contentful_id,
+  ]);
+  return (orgs as Org[])[0] || null;
+}
+
+export async function deleteOrgContentful(payload: any): Promise<Org | null> {
+  const contentful_id = payload.sys.id;
+
+  const org = await getOrgByContentfulId(contentful_id);
+
+  if (!org) {
+    throw new Error('Org not found in database using contentful id.');
+  }
+
+  await deleteOrg(org.id);
+
+  const deleted_org = await getOrgById(org.id);
+
+  return deleted_org;
+}

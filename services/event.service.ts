@@ -115,6 +115,16 @@ export async function getEventById(id: number): Promise<Event | null> {
   return events[0] || null;
 }
 
+export async function getEventByContentfulId(
+  contentful_id: string
+): Promise<Event | null> {
+  const [events] = await db.query(
+    'SELECT * FROM events WHERE contentful_id = ?',
+    [contentful_id]
+  );
+  return (events as Event[])[0] || null;
+}
+
 export async function updateEvent(
   id: number,
   data: UpdateEvent
@@ -240,4 +250,21 @@ export async function handleContentfulWebhook(payload: any): Promise<{
     : await createEventPayload(payload);
 
   return { event, is_created: !is_exists };
+}
+
+export async function deleteEventContentful(
+  payload: any
+): Promise<Event | null> {
+  const contentful_id = payload.sys.id;
+
+  const event = await getEventByContentfulId(contentful_id);
+
+  if (!event) {
+    throw new Error('Event not found in database using contentful id.');
+  }
+
+  await deleteEvent(event.id);
+
+  const deleted_event = await getEventById(event.id);
+  return deleted_event;
 }

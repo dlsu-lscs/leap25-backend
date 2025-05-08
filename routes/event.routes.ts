@@ -4,8 +4,7 @@ import * as eventController from '../controllers/event.controller';
 const router = Router();
 
 router.post('/', eventController.createEvent);
-router.post('/contentful', eventController.createEventContentful);
-router.put('/contentful', eventController.updateEventContentful);
+router.post('/contentful', eventController.handleEventContentfulWebhook);
 router.get('/', eventController.getAllEvents);
 router.get('/:id/media', eventController.getEventMedia);
 router.get('/:id', eventController.getEventByID);

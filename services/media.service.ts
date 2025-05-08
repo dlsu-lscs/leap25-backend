@@ -136,3 +136,25 @@ export async function handleContentfulWebhook(payload: any): Promise<{
 
   return { eventMedia, is_created: !is_exists };
 }
+
+export async function deleteEventMedia(
+  contentful_id: string
+): Promise<boolean> {
+  const [result] = await db.execute<mysql.ResultSetHeader>(
+    'DELETE FROM event_pubs WHERE contentful_id = ?',
+    [contentful_id]
+  );
+
+  return result.affectedRows > 0;
+}
+
+export async function deleteEventMediaContentful(
+  contentful_id: string
+): Promise<boolean> {
+  try {
+    return await deleteEventMedia(contentful_id);
+  } catch (error) {
+    console.error('Error deleting event media:', (error as Error).message);
+    return false;
+  }
+}

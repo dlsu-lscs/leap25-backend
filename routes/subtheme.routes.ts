@@ -5,6 +5,7 @@ const router = Router();
 
 router.post('/', subthemeController.createSubtheme);
 router.post('/contentful', subthemeController.handleSubthemeContentfulWebhook);
+router.delete('/contentful', subthemeController.deleteSubthemeContentful);
 router.get('/', subthemeController.getAllSubthemes);
 router.get('/:id', subthemeController.getSubthemeById);
 router.put('/:id', subthemeController.updateSubtheme);
