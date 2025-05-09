@@ -1,4 +1,4 @@
-import { getContentfulEnv } from 'config/contentful';
+import { getContentfulEnv } from '../config/contentful';
 import type { CreateOrg } from '../models/Org';
 
 export async function getImageUrlById(id: string): Promise<string | null> {
