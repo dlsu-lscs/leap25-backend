@@ -1,0 +1,246 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as RegistrationService from '../../services/registration.service';
+import { getDB } from '../../config/database';
+import { redisEventOps } from '../../config/redis';
+import type { PoolConnection } from 'mysql2/promise';
+
+// Mock the database
+vi.mock('../../config/database', () => ({
+  getDB: vi.fn().mockResolvedValue({
+    query: vi.fn(),
+    execute: vi.fn(),
+    getConnection: vi.fn(),
+  }),
+}));
+
+// Mock Redis client
+vi.mock('../../config/redis', () => ({
+  redisEventOps: {
+    updateSlotsAfterRegistration: vi.fn(),
+    invalidateEventSlots: vi.fn(),
+  },
+}));
+
+describe('RegistrationService Unit Tests', () => {
+  let connection: any; // Changed from PoolConnection to any to allow mock methods
+  let mockDb: any;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockDb = await getDB();
+
+    // Create a mock connection object with the required methods
+    connection = {
+      beginTransaction: vi.fn(),
+      query: vi.fn(),
+      execute: vi.fn(),
+      commit: vi.fn(),
+      rollback: vi.fn(),
+      release: vi.fn(),
+      destroy: vi.fn(),
+      ping: vi.fn(),
+      format: vi.fn(),
+      escape: vi.fn(),
+      escapeId: vi.fn(),
+      unprepare: vi.fn(),
+      prepare: vi.fn(),
+    };
+
+    // Update the mock to return our connection
+    mockDb.getConnection = vi.fn().mockResolvedValue(connection);
+  });
+
+  describe('getUserRegistrations', () => {
+    it('should get all registrations for a user', async () => {
+      const userId = 1;
+      const mockRegistrations = [
+        {
+          id: 1,
+          user_id: userId,
+          event_id: 101,
+          event_title: 'Test Event 1'
+        },
+        {
+          id: 2,
+          user_id: userId,
+          event_id: 102,
+          event_title: 'Test Event 2'
+        },
+      ];
+
+      mockDb.query.mockResolvedValueOnce([mockRegistrations]);
+
+      // Execute
+      const result = await RegistrationService.getUserRegistrations(userId);
+
+      // Assert
+      expect(mockDb.query).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /SELECT.*FROM registrations.*JOIN.*events.*WHERE.*user_id = \?/s
+        ),
+        [userId]
+      );
+      expect(result).toEqual(mockRegistrations);
+    });
+
+    it('should handle errors when getting user registrations', async () => {
+      // Setup
+      const userId = 1;
+      const error = new Error('Database error');
+      mockDb.query.mockRejectedValueOnce(error);
+
+      // Execute & Assert
+      await expect(
+        RegistrationService.getUserRegistrations(userId)
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('registerUserForEvent', () => {
+    it('should register a user for an event successfully', async () => {
+      // Setup
+      const mockData = {
+        user_id: 1,
+        event_id: 101,
+      };
+
+      // Mock event query response
+      connection.query.mockResolvedValueOnce([
+        [{ id: 101, registered_slots: 5, max_slots: 10 }],
+      ]);
+
+      // Mock existing registration check
+      connection.query.mockResolvedValueOnce([[]]);
+
+      // Mock insert registration
+      connection.execute.mockResolvedValueOnce([{ insertId: 1 }]);
+
+      // Mock update event slots
+      connection.execute.mockResolvedValueOnce([{}]);
+
+      // Execute
+      const result = await RegistrationService.registerUserForEvent(mockData);
+
+      // Assert
+      expect(connection.beginTransaction).toHaveBeenCalled();
+      expect(connection.query).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'SELECT id, registered_slots, max_slots FROM events'
+        ),
+        [mockData.event_id]
+      );
+      expect(connection.query).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'SELECT id FROM registrations WHERE user_id = ? AND event_id = ?'
+        ),
+        [mockData.user_id, mockData.event_id]
+      );
+      expect(connection.execute).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'INSERT INTO registrations (user_id, event_id)'
+        ),
+        expect.arrayContaining([mockData.user_id, mockData.event_id])
+      );
+      expect(connection.execute).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE events SET registered_slots'),
+        [mockData.event_id]
+      );
+      expect(connection.commit).toHaveBeenCalled();
+      expect(redisEventOps.updateSlotsAfterRegistration).toHaveBeenCalledWith(
+        mockData.event_id
+      );
+
+      expect(result).toEqual({
+        id: 1,
+        user_id: mockData.user_id,
+        event_id: mockData.event_id
+      });
+    });
+
+    it('should return null when event does not exist', async () => {
+      // Setup
+      const mockData = {
+        user_id: 1,
+        event_id: 999,
+      };
+
+      // Mock event query response (empty array means no event found)
+      connection.query.mockResolvedValueOnce([[]]);
+
+      // Execute & Assert
+      const result = await RegistrationService.registerUserForEvent(mockData);
+      expect(result).toBeNull();
+      expect(connection.rollback).toHaveBeenCalled();
+    });
+
+    it('should throw error when no slots available', async () => {
+      // Setup
+      const mockData = {
+        user_id: 1,
+        event_id: 101,
+      };
+
+      // Mock event query response with max slots reached
+      connection.query.mockResolvedValueOnce([
+        [{ id: 101, registered_slots: 10, max_slots: 10 }],
+      ]);
+
+      // Execute & Assert
+      await expect(
+        RegistrationService.registerUserForEvent(mockData)
+      ).rejects.toThrow('No available slots for this event');
+      expect(connection.rollback).toHaveBeenCalled();
+    });
+
+    it('should throw error when user already registered', async () => {
+      // Setup
+      const mockData = {
+        user_id: 1,
+        event_id: 101,
+      };
+
+      // Mock event query response
+      connection.query.mockResolvedValueOnce([
+        [{ id: 101, registered_slots: 5, max_slots: 10 }],
+      ]);
+
+      // Mock existing registration check - user already registered
+      connection.query.mockResolvedValueOnce([[{ id: 5 }]]);
+
+      // Execute & Assert
+      await expect(
+        RegistrationService.registerUserForEvent(mockData)
+      ).rejects.toThrow('User already registered for this event');
+      expect(connection.rollback).toHaveBeenCalled();
+    });
+
+    it('should handle database errors during registration', async () => {
+      // Setup
+      const mockData = {
+        user_id: 1,
+        event_id: 101,
+      };
+
+      // Mock event query success
+      connection.query.mockResolvedValueOnce([
+        [{ id: 101, registered_slots: 5, max_slots: 10 }],
+      ]);
+
+      // Mock no existing registration
+      connection.query.mockResolvedValueOnce([[]]);
+
+      // Mock database error on insert
+      const error = new Error('Database error');
+      connection.execute.mockRejectedValueOnce(error);
+
+      // Execute & Assert
+      await expect(
+        RegistrationService.registerUserForEvent(mockData)
+      ).rejects.toThrow();
+      expect(connection.rollback).toHaveBeenCalled();
+      expect(redisEventOps.invalidateEventSlots).toHaveBeenCalledWith(
+        mockData.event_id
+      );
+    });
+  });
+});

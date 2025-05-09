@@ -1,10 +1,11 @@
 ---
-name: Continuous Integration
+name: Test Workflow
 
 on:
+  push:
+    branches: [main, staging]
   pull_request:
-    branches:
-      - main
+    branches: [main, staging]
 
 jobs:
   test:
@@ -28,6 +29,5 @@ jobs:
       - name: Run linting
         run: npm run lint
 
-    # TODO: uncomment when have tests already
-    # - name: Run tests
-    #   run: npm run test
+      - name: Run unit tests
+        run: npm run test:unit

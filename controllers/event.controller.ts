@@ -32,6 +32,32 @@ export async function getEventByID(
   }
 }
 
+export async function getEventBySubtheme(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { subtheme } = req.body;
+
+    if (!subtheme) {
+      res.status(400).json({ message: 'Subtheme title is required' });
+      return;
+    }
+
+    const event = await EventService.getEventBySubtheme(String(subtheme));
+    if (event) {
+      res.status(200).json(event);
+    } else {
+      console.log('Event not found');
+      res.status(404).json({ message: 'Event not found' });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+}
+
 export async function createEvent(
   req: Request,
   res: Response,
@@ -239,5 +265,33 @@ export async function deleteEventContentful(
     res.status(200).json({ message: 'Event deleted.' });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function getEventSlots(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const eventId = Number(req.params.eventId);
+    const slots = await EventService.getEventAvailableSlots(eventId);
+
+    if (slots === null) {
+      res.status(404).json({ message: `No event found of id: ${eventId}` });
+      return;
+    }
+
+    if (!slots) {
+      res
+        .status(400)
+        .json({ message: `No slots found for the event ${eventId}.` });
+      return;
+    }
+
+    res.status(200).json(slots);
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 }

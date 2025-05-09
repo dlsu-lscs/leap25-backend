@@ -19,7 +19,10 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"**/*.{ts,json,md}\"",
     "prepare": "husky",
-    "pre-commit": "lint-staged"
+    "pre-commit": "lint-staged",
+    "migrate": "node --loader ts-node/esm migrations/run-migrations.ts",
+    "seed": "node --loader ts-node/esm migrations/seed.ts",
+    "db:init": "npm run migrate && npm run seed"
   },
   "lint-staged": {
     "*.ts": [

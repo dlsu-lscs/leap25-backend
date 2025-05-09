@@ -1,0 +1,140 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as EventService from '../../services/event.service';
+import { redisEventOps, isRedisReady } from '../../config/redis';
+import { getDB } from '../../config/database';
+
+// Mock the database
+vi.mock('../../config/database', () => ({
+  getDB: vi.fn().mockResolvedValue({
+    query: vi.fn(),
+  }),
+}));
+
+// Mock Redis client
+vi.mock('../../config/redis', () => ({
+  redisEventOps: {
+    getEventSlots: vi.fn(),
+    setEventSlots: vi.fn(),
+  },
+  isRedisReady: vi.fn().mockReturnValue(true),
+}));
+
+// Mock the getEventById function directly
+vi.mock('../../services/event.service', async (importOriginal) => {
+  const actual = await importOriginal();
+
+  return {
+    ...actual,
+    getEventById: vi.fn().mockImplementation((id) => {
+      if (id === 999) return Promise.resolve(null);
+
+      return Promise.resolve({
+        id: id,
+        org_id: 1,
+        title: 'Test Event',
+        code: 'TEST123',
+        registered_slots: 3,
+        max_slots: 10,
+        schedule: new Date()
+      });
+    }),
+    // Keep the original implementation to test
+    getEventAvailableSlots: actual.getEventAvailableSlots,
+  };
+});
+
+describe('Event Slots Service', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('getEventAvailableSlots', () => {
+    it('should return slots from cache if available', async () => {
+      // Setup
+      const eventId = 1;
+      const cachedSlots = { available: 5, total: 10 };
+
+      // Configure the mock to return the cached slots
+      vi.mocked(redisEventOps.getEventSlots).mockResolvedValueOnce(cachedSlots);
+
+      // Execute
+      const result = await EventService.getEventAvailableSlots(eventId);
+
+      // Assert
+      expect(redisEventOps.getEventSlots).toHaveBeenCalledWith(eventId);
+      expect(result).toEqual(cachedSlots);
+    });
+
+    it('should fetch slots from database if not in cache', async () => {
+      // Setup
+      const eventId = 1;
+
+      // Cache miss
+      vi.mocked(redisEventOps.getEventSlots).mockResolvedValueOnce(null);
+
+      // Execute
+      const result = await EventService.getEventAvailableSlots(eventId);
+
+      // Assert
+      expect(redisEventOps.getEventSlots).toHaveBeenCalledWith(eventId);
+      expect(EventService.getEventById).toHaveBeenCalledWith(eventId);
+      expect(redisEventOps.setEventSlots).toHaveBeenCalledWith(
+        eventId,
+        { available: 7, total: 10 },
+        300
+      );
+      expect(result).toEqual({ available: 7, total: 10 });
+    });
+
+    it('should return null if event does not exist', async () => {
+      // Setup
+      const eventId = 999;
+
+      // Cache miss
+      vi.mocked(redisEventOps.getEventSlots).mockResolvedValueOnce(null);
+
+      // Execute
+      const result = await EventService.getEventAvailableSlots(eventId);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('should handle errors properly', async () => {
+      // Setup
+      const eventId = 1;
+      const mockEvent = {
+        id: eventId,
+        max_slots: 10,
+        registered_slots: 3,
+        title: 'Test Event',
+        code: 'TEST123',
+        org_id: 1,
+        schedule: new Date()
+      };
+
+      // Redis error
+      vi.mocked(redisEventOps.getEventSlots).mockRejectedValueOnce(new Error('Redis error'));
+
+      // Execute
+      const result = await EventService.getEventAvailableSlots(eventId);
+
+      // Assert
+      expect(result).toEqual({ available: 7, total: 10 });
+    });
+
+    it('should handle database errors', async () => {
+      // Setup
+      const eventId = 1;
+
+      // Cache miss
+      vi.mocked(redisEventOps.getEventSlots).mockResolvedValueOnce(null);
+
+      // Database error - override the mock for this test only
+      vi.mocked(EventService.getEventById).mockRejectedValueOnce(new Error('Database error'));
+
+      // Execute & Assert
+      await expect(EventService.getEventAvailableSlots(eventId)).rejects.toThrow('Database error');
+    });
+  });
+});

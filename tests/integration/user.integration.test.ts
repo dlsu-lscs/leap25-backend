@@ -1,7 +1,9 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import * as UserService from '../../services/user.service';
-import db from '../../config/connectdb';
+import { getDB } from '../../config/database';
 // import { db } from '../setup-mockdb.ts';
+
+const db = await getDB();
 
 describe('UserService Integration Tests', () => {
   let createdUserId: number;
@@ -31,7 +33,7 @@ describe('UserService Integration Tests', () => {
     expect(user.name).toBe(testUser.name);
     expect(user.display_picture).toBe(testUser.display_picture);
 
-    createdUserId = user.id;
+    createdUserId = Number(user.id);
   });
 
   it('should get all users', async () => {

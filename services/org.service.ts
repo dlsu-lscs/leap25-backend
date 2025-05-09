@@ -1,11 +1,12 @@
 import mysql from 'mysql2/promise';
-import db from '../config/connectdb';
 import { getOrg } from './contentful.service';
+import { getDB } from '../config/database';
 import type { Org, CreateOrg, UpdateOrg } from '../models/Org';
 import { getImageUrlById } from './contentful.service';
 
 export async function createOrg(data: CreateOrg): Promise<Org> {
   const { name, org_logo, contentful_id } = data;
+  const db = await getDB();
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
     'INSERT INTO orgs (name, org_logo, contentful_id) VALUES (?, ?, ?)',
@@ -43,11 +44,13 @@ export async function createOrgPayload(payload: any): Promise<Org | null> {
 }
 
 export async function getAllOrgs(): Promise<Org[]> {
+  const db = await getDB();
   const [rows] = await db.query('SELECT * FROM orgs');
   return rows as Org[];
 }
 
 export async function getOrgById(id: number): Promise<Org | null> {
+  const db = await getDB();
   const [rows] = await db.query('SELECT * FROM orgs WHERE id = ?', [id]);
   const orgs = rows as Org[];
   return orgs[0] || null;
@@ -61,7 +64,7 @@ export async function updateOrg(
   if (!existingOrg) return null;
 
   const { name = existingOrg.name, org_logo = existingOrg.org_logo } = data;
-
+  const db = await getDB();
   await db.execute('UPDATE orgs SET name = ?, org_logo = ? WHERE id = ?', [
     name,
     org_logo,
@@ -75,6 +78,7 @@ export async function updateOrgPayload(
   payload: any
 ): Promise<UpdateOrg | null> {
   const fields = payload.fields;
+  const db = await getDB();
 
   const org_logo_id = fields.org_logo?.['en-US']?.sys?.id;
   const org_logo = org_logo_id ? await getImageUrlById(org_logo_id) : null;
@@ -106,6 +110,7 @@ export async function updateOrgPayload(
 }
 
 export async function deleteOrg(id: number): Promise<void> {
+  const db = await getDB();
   await db.execute('DELETE FROM orgs WHERE id = ?', [id]);
 }
 
@@ -114,6 +119,7 @@ export async function handleContentfulWebhook(payload: any): Promise<{
   is_created: boolean;
 }> {
   const contentful_id = payload.sys.id;
+  const db = await getDB();
 
   const [orgs] = (await db.execute(
     'SELECT contentful_id FROM orgs WHERE contentful_id = ?',
@@ -132,6 +138,7 @@ export async function handleContentfulWebhook(payload: any): Promise<{
 export async function getOrgByContentfulId(
   contentful_id: string
 ): Promise<Org | null> {
+  const db = await getDB();
   const [orgs] = await db.query('SELECT * FROM orgs WHERE contentful_id = ?', [
     contentful_id,
   ]);

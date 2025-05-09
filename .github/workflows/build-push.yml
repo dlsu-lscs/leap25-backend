@@ -1,15 +1,16 @@
 ---
-name: Continuous Delivery
+name: Build and Push Image
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: ["Test Workflow"]
+    branches: [main, staging]
+    types:
+      - completed
 
 jobs:
   build-and-push:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,10 +35,12 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=sha,format=short
             type=ref,event=branch
+            type=ref,event=pr
+            type=sha,format=short
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -48,3 +51,19 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+    # if using Helm charts for deployment
+    # - name: Trigger chart update
+    #   uses: peter-evans/repository-dispatch@v2
+    #   with:
+    #     token: ${{ secrets.PAT_TOKEN }}
+    #     repository: ${{ github.repository_owner }}/event-platform-infra
+    #     event-type: update-api-chart
+    #     client-payload: |
+    #       {
+    #         "branch": "${{ github.ref_name }}",
+    #         "sha": "${{ github.sha }}",
+    #         "short_sha": "${{ github.sha }}",
+    #         "is_default_branch": "${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
+    #         "tags": ${{ steps.meta.outputs.json }}
+    #       }

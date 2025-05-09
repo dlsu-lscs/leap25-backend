@@ -6,8 +6,10 @@ import prettier from 'eslint-config-prettier';
 export default [
   eslint.configs.recommended,
   {
+    ignores: ['**/dist/*', '**/tests/*', 'tsconfig.json'],
+  },
+  {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.mjs'],
-    ignores: ['**/config/passport.ts'],
     languageOptions: {
       parser: typescript,
       parserOptions: {
@@ -25,6 +27,8 @@ export default [
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'warn',
       '@typescript-eslint/no-unused-vars': 'warn',
+      'no-unused-vars': 'off',
+      'no-undef': 'off',
     },
   },
   prettier,

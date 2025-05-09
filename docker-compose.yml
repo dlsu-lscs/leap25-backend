@@ -9,58 +9,68 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - MYSQL_HOST=mysql
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=root
-      - MYSQL_DATABASE=leap25db
-      - DB_HOST=localhost
-      - DB_USER=root
-      - DB_PASS=root
-      - DB_NAME=leap25db
-      - DB_PORT=3306
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - SESSION_SECRET=secret
       - PORT=3000
+      - DB_HOST=mysql
+      - DB_USER=leap25user
+      - DB_PASS=leap25password
+      - DB_DATABASE=leap25db
+      - DB_PORT=3306
+      - SESSION_SECRET=devSessionSecret123
+      - JWT_SECRET=devJwtSecret123
+      - REDIS_CONNECTION_URL=redis://redis:6379
+      - CORS_ORIGIN=*
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - leap25-network
 
   mysql:
     image: mysql:8.0
     container_name: leap25-mysql
     restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: leap25db
+      MYSQL_USER: leap25user
+      MYSQL_PASSWORD: leap25password
     ports:
       - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: leap25db
     volumes:
-      - mysql-data-leap25:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 5s
       timeout: 10s
       retries: 5
       start_period: 15s
+    networks:
+      - leap25-network
 
   redis:
     image: redis:7-alpine
+    container_name: leap25-redis
     ports:
       - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
     volumes:
-      - redis-data-leap25:/data
+      - redis-data:/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 10s
       retries: 5
+    networks:
+      - leap25-network
+
+networks:
+  leap25-network:
+    driver: bridge
 
 volumes:
-  mysql-data-leap25:
-  redis-data-leap25:
+  mysql-data:
+  redis-data:
