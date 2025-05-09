@@ -2,7 +2,7 @@ import { Router } from 'express';
 import {
   handleEventMediaContentfulWebhook,
   deleteEventMediaContentfulController,
-} from 'controllers/media.controller';
+} from '../controllers/media.controller';
 
 const router = Router();
 

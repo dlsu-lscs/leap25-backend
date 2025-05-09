@@ -1,15 +1,16 @@
 import mysql from 'mysql2/promise';
 import { getImageUrlById } from './contentful.service';
-import { getEventByContentfulId } from 'services/event.service';
+import { getEventByContentfulId } from './event.service';
 import type {
   EventMediaPayload,
   EventMedia,
   UpdateEventMedia,
 } from '../models/EventMedia';
-import db from '../config/connectdb';
+import { getDB } from '../config/database';
 
 export async function createEventMedia(data: EventMedia): Promise<EventMedia> {
   const { pub_url, pub_type, event_id, contentful_id } = data;
+  const db = await getDB();
 
   const [new_event_media] = (await db.execute<mysql.ResultSetHeader>(
     'INSERT INTO event_pubs (pub_url, pub_type, event_id, contentful_id) VALUES (?, ?, ?, ?)',
@@ -74,6 +75,7 @@ export async function updateEventMedia(
   contentful_id: string
 ): Promise<UpdateEventMedia> {
   const { pub_url, pub_type } = payload;
+  const db = await getDB();
 
   const [result] = (await db.execute<mysql.ResultSetHeader>(
     'UPDATE event_pubs SET pub_url = ?, pub_type = ? WHERE contentful_id = ?',
@@ -123,6 +125,7 @@ export async function handleContentfulWebhook(payload: any): Promise<{
   is_created: boolean;
 }> {
   const contentful_id = payload.sys.id;
+  const db = await getDB();
 
   const [rows] = (await db.execute(
     'SELECT contentful_id FROM event_pubs WHERE contentful_id = ?',
@@ -141,6 +144,7 @@ export async function handleContentfulWebhook(payload: any): Promise<{
 export async function deleteEventMedia(
   contentful_id: string
 ): Promise<boolean> {
+  const db = await getDB();
   const [result] = await db.execute<mysql.ResultSetHeader>(
     'DELETE FROM event_pubs WHERE contentful_id = ?',
     [contentful_id]
