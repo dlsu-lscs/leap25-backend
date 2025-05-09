@@ -125,7 +125,7 @@ export async function deleteSubthemeContentful(
     const payload = req.body;
 
     const is_valid =
-      payload?.sys?.type === 'Entry' &&
+      payload?.sys?.type === 'DeletedEntry' &&
       payload?.sys?.environment?.sys?.id === 'master' &&
       payload?.sys?.contentType?.sys?.id === 'subtheme';
 

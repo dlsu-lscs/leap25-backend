@@ -1,7 +1,7 @@
 export interface EventMedia {
   pub_url: string;
   pub_type: string;
-  event_id: string;
+  event_id: number;
   contentful_id: string;
 }
 

@@ -1,6 +1,6 @@
 import {
   handleContentfulWebhook,
-  deleteEventMediaContentful,
+  deleteEventMedia,
 } from '../services/media.service';
 import type { Request, Response } from 'express';
 
@@ -21,7 +21,7 @@ export async function handleEventMediaContentfulWebhook(
     const isValid =
       payload?.sys?.type === 'Entry' &&
       payload?.sys?.environment?.sys?.id === 'master' &&
-      payload?.sys?.contentType?.sys?.id === 'eventPub';
+      payload?.sys?.contentType?.sys?.id === 'eventMedia';
 
     if (!isValid) {
       res.status(400).json({ error: 'Invalid payload or content type.' });
@@ -58,12 +58,15 @@ export async function deleteEventMediaContentfulController(
     const payload = req.body;
     const contentful_id = payload?.sys?.id;
 
-    if (!contentful_id || payload?.sys?.type !== 'DeletedEntry') {
+    if (
+      payload?.sys?.contentType?.sys?.id !== 'eventMedia' ||
+      payload?.sys?.type !== 'DeletedEntry'
+    ) {
       res.status(400).json({ message: 'Invalid delete webhook payload.' });
       return;
     }
 
-    const deleted = await deleteEventMediaContentful(contentful_id);
+    const deleted = await deleteEventMedia(contentful_id);
 
     if (!deleted) {
       res.status(500).json({ error: 'Failed to delete event media.' });

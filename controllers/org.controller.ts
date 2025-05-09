@@ -123,12 +123,12 @@ export async function deleteOrgContentful(
 
     const payload = req.body;
 
-    const isValid =
-      payload?.sys?.type === 'Entry' &&
+    const is_valid =
+      payload?.sys?.type === 'DeletedEntry' &&
       payload?.sys?.environment?.sys?.id === 'master' &&
       payload?.sys?.contentType?.sys?.id === 'org';
 
-    if (!isValid) {
+    if (!is_valid) {
       res.status(400).json({ error: 'Invalid payload or content type.' });
       return;
     }

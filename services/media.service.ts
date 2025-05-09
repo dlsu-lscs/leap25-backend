@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 import { getImageUrlById } from './contentful.service';
+import { getEventByContentfulId } from 'services/event.service';
 import type {
   EventMediaPayload,
   EventMedia,
@@ -15,11 +16,16 @@ export async function createEventMedia(data: EventMedia): Promise<EventMedia> {
     [pub_url, pub_type, event_id, contentful_id]
   )) as any[];
 
-  if (new_event_media.length === 0) {
+  if (new_event_media.affectedRows === 0) {
     throw new Error('Error when making a new event pub.');
   }
 
-  return new_event_media[0] as EventMedia;
+  const [event_media] = (await db.query(
+    'SELECT * FROM event_pubs WHERE contentful_id = ?',
+    [contentful_id]
+  )) as any[];
+
+  return event_media[0] as EventMedia;
 }
 
 export async function createEventMediaContentful(
@@ -34,28 +40,23 @@ export async function createEventMediaContentful(
     }
 
     const pub_type = fields.pubType['en-US'];
-    const eventRef = fields.eventRef['en-US'].sys.id;
+    const event_ref = fields.eventRef['en-US'].sys.id;
     const pub_url = await getImageUrlById(pub_asset);
     const contentful_id = payload.sys.id;
 
-    const [events] = await db.execute<mysql.RowDataPacket[]>(
-      'SELECT id FROM events WHERE contentful_id = ?',
-      [eventRef]
-    );
+    const event = await getEventByContentfulId(event_ref);
 
-    if (events.length === 0)
-      throw new Error(`Event not found with contentful_id = ${eventRef}`);
+    if (!event)
+      throw new Error(`Event not found with contentful_id = ${event_ref}`);
 
-    const event_id = events[0]?.id;
-
-    if (!pub_url || !event_id) {
+    if (!pub_url || !event.id) {
       throw new Error('Error in getting publication asset.');
     }
 
     const event_media = {
       pub_url,
       pub_type,
-      event_id,
+      event_id: event.id,
       contentful_id,
     };
 
@@ -123,12 +124,12 @@ export async function handleContentfulWebhook(payload: any): Promise<{
 }> {
   const contentful_id = payload.sys.id;
 
-  const [rows] = await db.execute(
+  const [rows] = (await db.execute(
     'SELECT contentful_id FROM event_pubs WHERE contentful_id = ?',
     [contentful_id]
-  );
+  )) as any[];
 
-  const is_exists: boolean = (rows as any[]).length > 0;
+  const is_exists: boolean = rows.length > 0;
 
   const eventMedia = is_exists
     ? await updateEventMediaContentful(payload)
@@ -146,15 +147,4 @@ export async function deleteEventMedia(
   );
 
   return result.affectedRows > 0;
-}
-
-export async function deleteEventMediaContentful(
-  contentful_id: string
-): Promise<boolean> {
-  try {
-    return await deleteEventMedia(contentful_id);
-  } catch (error) {
-    console.error('Error deleting event media:', (error as Error).message);
-    return false;
-  }
 }
