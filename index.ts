@@ -14,6 +14,7 @@ import eventRouter from './routes/event.routes';
 import authRouter from './routes/auth.routes';
 import orgRouter from './routes/org.routes';
 import subthemeRouter from './routes/subtheme.routes';
+import mediaRouter from './routes/media.routes';
 import registrationRouter from './routes/registration.routes';
 import healthRouter from './routes/health.routes';
 
@@ -66,9 +67,10 @@ const startServer = async (): Promise<void> => {
     app.use('/orgs', orgRouter);
     app.use('/subthemes', subthemeRouter);
     app.use('/registrations', registrationRouter);
+    app.use('/media', mediaRouter);
     app.use('/health', healthRouter);
 
-    app.get('/', (req, res) => {
+    app.get('/', (_, res) => {
       res.status(200).json({
         status: 'ok',
         message:

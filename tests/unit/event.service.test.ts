@@ -20,6 +20,57 @@ vi.mock('../../config/redis', () => ({
   isRedisReady: vi.fn().mockReturnValue(true),
 }));
 
+vi.mock('../../config/contentful', () => {
+  return {
+    getContentfulEnv: vi.fn().mockResolvedValue({
+      getAsset: vi.fn().mockResolvedValue({
+        fields: {
+          file: {
+            'en-US': {
+              url: 'https://example.com/mock-image.jpg',
+            },
+          },
+        },
+      }),
+      getEntry: vi.fn().mockResolvedValue({
+        sys: {
+          id: 'mock-contentful-id',
+        },
+        fields: {
+          org_name: {
+            'en-US': 'Mock Organization',
+          },
+          org_logo: {
+            'en-US': 'https://example.com/mock-logo.jpg',
+          },
+          id: {
+            'en-US': '123',
+          },
+        },
+      }),
+    }),
+    client: {
+      getSpace: vi.fn().mockResolvedValue({
+        getEnvironment: vi.fn(),
+      }),
+    },
+  };
+});
+
+vi.mock('../../services/contentful.service', () => {
+  return {
+    getImageUrlById: vi
+      .fn()
+      .mockResolvedValue('https://example.com/mock-image.jpg'),
+    getOrg: vi.fn().mockResolvedValue({
+      name: 'Mock Organization',
+      org_logo: 'https://example.com/mock-logo.jpg',
+      contentful_id: 'mock-contentful-id',
+    }),
+    getSubthemeId: vi.fn().mockResolvedValue('123'),
+  };
+});
+
 describe('EventService Unit Tests', () => {
   let mockDb: any;
 
@@ -42,6 +93,7 @@ describe('EventService Unit Tests', () => {
       code: 'CODE123',
       registered_slots: 0,
       max_slots: 50,
+      contentful_id: 'abc123',
     };
 
     const mockResult = [{ insertId: 1 }];
@@ -52,18 +104,19 @@ describe('EventService Unit Tests', () => {
 
     // Assert
     expect(mockDb.execute).toHaveBeenCalledWith(
-      'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
-        mockEvent.org_id,
-        mockEvent.title,
-        mockEvent.description,
-        mockEvent.subtheme_id,
-        mockEvent.venue,
-        mockEvent.schedule,
-        mockEvent.fee,
-        mockEvent.code,
-        expect.any(Number),
-        mockEvent.max_slots,
+        mockEvent.org_id ?? null,
+        mockEvent.title ?? null,
+        mockEvent.description ?? null,
+        mockEvent.subtheme_id ?? null,
+        mockEvent.venue ?? null,
+        mockEvent.schedule ?? null,
+        mockEvent.fee ?? null,
+        mockEvent.code ?? null,
+        mockEvent.registered_slots ?? null,
+        mockEvent.max_slots ?? null,
+        mockEvent.contentful_id ?? null,
       ]
     );
 

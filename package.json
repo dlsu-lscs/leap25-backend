@@ -48,6 +48,8 @@
   "dependencies": {
     "axios": "^1.9.0",
     "connect-redis": "^8.0.3",
+    "contentful": "^11.5.18",
+    "contentful-management": "^11.52.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -58,7 +60,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "punycode": "^2.3.1",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "smee-client": "^3.1.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",

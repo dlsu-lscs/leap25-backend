@@ -3,16 +3,19 @@ export interface Subtheme {
   title: string;
   logo_pub_url: string;
   background_pub_url: string;
+  contentful_id: string;
 }
 
 export interface CreateSubtheme {
   title: string;
   logo_pub_url: string;
   background_pub_url: string;
+  contentful_id: string;
 }
 
 export interface UpdateSubtheme {
   title?: string;
   logo_pub_url?: string;
   background_pub_url?: string;
+  contentful_id: string;
 }

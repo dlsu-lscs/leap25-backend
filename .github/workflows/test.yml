@@ -10,6 +10,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      CONTENTFUL_ACCESS_TOKEN: 'mock-token-for-ci'
+      CONTENTFUL_SPACE_ID: 'mock-space-for-ci'
+      CONTENTFUL_ENVIRONMENT: 'master'
+      JWT_SECRET: 'test-secret'
+      SESSION_SECRET: 'test-session-secret'
     steps:
       - name: Checkout
         uses: actions/checkout@v4

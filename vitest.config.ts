@@ -10,6 +10,16 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    setupFiles: ['./tests/unit-setup.ts'],
+    environmentOptions: {
+      env: {
+        CONTENTFUL_ACCESS_TOKEN: 'mock-token',
+        CONTENTFUL_SPACE_ID: 'mock-space',
+        CONTENTFUL_ENVIRONMENT: 'master',
+        JWT_SECRET: 'test-secret',
+        SESSION_SECRET: 'test-session-secret',
+      },
+    },
   },
   resolve: {
     alias: {

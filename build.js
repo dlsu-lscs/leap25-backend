@@ -19,12 +19,16 @@ try {
       'express-session',
       'connect-redis',
       'redis',
+      'contentful-management',
+      'google-auth-library',
       'child_process',
       'fs',
       'path',
       'os',
       'jsonwebtoken',
       'axios',
+      'qs',
+      'smee-client',
     ],
   });
   console.log('Build complete');

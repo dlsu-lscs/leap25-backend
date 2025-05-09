@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as SubthemeService from '../services/subtheme.service';
+import 'dotenv/config';
 
 export async function getAllSubthemes(
   req: Request,
@@ -28,6 +29,42 @@ export async function getSubthemeById(
     else res.status(404).json({ message: 'Subtheme not found' });
   } catch (error) {
     next(error);
+  }
+}
+
+export async function handleSubthemeContentfulWebhook(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const secret = req.headers['contentful-webhook-secret'];
+
+    if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
+      return;
+    }
+
+    const payload = req.body;
+
+    const isValid =
+      payload?.sys?.type === 'Entry' &&
+      payload?.sys?.environment?.sys?.id === 'master' &&
+      payload?.sys?.contentType?.sys?.id === 'subtheme';
+
+    if (!isValid) {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+      return;
+    }
+
+    const subtheme = await SubthemeService.handleContentfulWebhook(payload);
+
+    if (!subtheme) {
+      res.status(500).json({ error: 'Error when updating/creating subtheme.' });
+    }
+
+    res.status(subtheme.is_created ? 201 : 200).json(subtheme.subtheme);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
   }
 }
 
@@ -70,5 +107,46 @@ export async function deleteSubtheme(
     res.status(204).send();
   } catch (error) {
     next(error);
+  }
+}
+
+export async function deleteSubthemeContentful(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const secret = req.headers['contentful-webhook-secret'];
+
+    if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
+      res.status(401).json({ message: 'Unauthorized access of webhook url.' });
+      return;
+    }
+
+    const payload = req.body;
+
+    const is_valid =
+      payload?.sys?.type === 'DeletedEntry' &&
+      payload?.sys?.environment?.sys?.id === 'master' &&
+      payload?.sys?.contentType?.sys?.id === 'subtheme';
+
+    if (!is_valid) {
+      res.status(400).json({ error: 'Invalid payload or content type.' });
+      return;
+    }
+
+    const subtheme = await SubthemeService.deleteSubthemeContentful(payload);
+
+    if (subtheme) {
+      res
+        .status(500)
+        .json({ error: 'Failure to delete subtheme through contentful' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Subtheme deleted.' });
+  } catch (error) {
+    res.status(500).json({
+      error: (error as Error).message,
+    });
   }
 }
