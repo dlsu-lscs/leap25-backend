@@ -8,7 +8,32 @@ export async function getAllEvents(
   next: NextFunction
 ): Promise<void> {
   try {
-    console.log(req.body);
+    const code = req.query.code as string;
+    const day = parseInt(req.query.day as string);
+
+    if (code) {
+      const event = await EventService.getEventByCode(code);
+
+      if (!event) {
+        res.status(404).json({ message: `No event found of code: ${code}` });
+        return;
+      }
+
+      res.status(200).json(event);
+      return;
+    }
+
+    if (day) {
+      const events = await EventService.getEventsByDay(day);
+
+      if (!events || events.length === 0) {
+        res.status(404).json({ message: `No events found for day ${day}` });
+        return;
+      }
+
+      res.status(200).json(events);
+      return;
+    }
     const events = await EventService.getAllEvents();
     res.status(200).json(events);
   } catch (error) {
@@ -290,27 +315,6 @@ export async function getEventSlots(
     }
 
     res.status(200).json(slots);
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-}
-
-export async function getEventByCode(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const code = req.query.code as string;
-    const event = await EventService.getEventByCode(code);
-
-    if (!event) {
-      res.status(404).json({ message: `No event found of code: ${code}` });
-      return;
-    }
-
-    res.status(200).json(event);
   } catch (error) {
     console.error(error);
     next(error);

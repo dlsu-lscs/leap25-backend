@@ -7,7 +7,21 @@ export async function getAllUsers(
   next: NextFunction
 ): Promise<void> {
   try {
-    console.log(req.body);
+    const email = req.query.email as string;
+
+    if (email) {
+      const email = req.query.email as string;
+
+      const user = await UserService.getUserByEmail(email);
+
+      if (!user) {
+        res.status(404).json({ error: 'User not found.' });
+      }
+
+      res.status(200).json(user);
+      return;
+    }
+
     const users = await UserService.getAllUsers();
     res.status(200).json(users);
   } catch (error) {
@@ -68,26 +82,5 @@ export async function deleteUser(
     res.status(204).send();
   } catch (error) {
     next(error);
-  }
-}
-
-export async function getUserByEmail(
-  req: Request,
-  res: Response
-): Promise<void> {
-  try {
-    const email = req.query.email as string;
-
-    const user = await UserService.getUserByEmail(email);
-
-    if (!user) {
-      res.status(404).json({ error: 'User not found.' });
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({
-      error: (error as Error).message,
-    });
   }
 }
