@@ -150,3 +150,25 @@ export async function deleteSubthemeContentful(
     });
   }
 }
+
+export async function getSubthemeByName(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const name = req.query.name as string;
+
+    const subtheme = await SubthemeService.getSubthemeByName(name);
+
+    if (!subtheme) {
+      res.status(404).json({ error: 'Subtheme not found by name.' });
+      return;
+    }
+
+    res.status(200).json(subtheme);
+  } catch (error) {
+    res.status(500).json({
+      error: (error as Error).message,
+    });
+  }
+}

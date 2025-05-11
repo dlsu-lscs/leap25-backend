@@ -70,3 +70,24 @@ export async function deleteUser(
     next(error);
   }
 }
+
+export async function getUserByEmail(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const email = req.query.email as string;
+
+    const user = await UserService.getUserByEmail(email);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found.' });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({
+      error: (error as Error).message,
+    });
+  }
+}
