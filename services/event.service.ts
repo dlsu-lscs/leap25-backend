@@ -426,3 +426,14 @@ export async function verifyAllEventSlotsConsistency(): Promise<void> {
     console.error('Error during event slots consistency check:', error);
   }
 }
+
+export async function getEventByCode(code: string): Promise<Event | null> {
+  const db = await getDB();
+  const events = await db.query('SELECT * FROM events WHERE code = ?', [code]);
+
+  if ((events as any[]).length === 0) {
+    throw new Error('Error getting event by code.');
+  }
+
+  return (events as any[])[0] as Event;
+}

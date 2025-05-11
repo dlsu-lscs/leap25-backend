@@ -295,3 +295,24 @@ export async function getEventSlots(
     next(error);
   }
 }
+
+export async function getEventByCode(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const code = req.query.code as string;
+    const event = await EventService.getEventByCode(code);
+
+    if (!event) {
+      res.status(404).json({ message: `No event found of code: ${code}` });
+      return;
+    }
+
+    res.status(200).json(event);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+}
