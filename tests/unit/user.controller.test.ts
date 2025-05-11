@@ -21,7 +21,7 @@ describe('User Controller', () => {
   });
 
   it('should get all users', async () => {
-    const req = {} as any;
+    const req = { query: {} } as any;
     const res = mockResponse();
 
     const fakeUser = [

@@ -69,7 +69,7 @@ describe('Event Controller', () => {
   });
 
   it('should get all events', async () => {
-    const req = {} as any;
+    const req = { query: {} } as any;
     const res = mockResponse();
     const fakeEvents = [{ id: 1, title: 'Test Event' }];
 
@@ -90,6 +90,7 @@ describe('Event Controller', () => {
         registered_slots: 0,
         max_slots: 10,
       },
+      query: {},
     } as any;
     const res = mockResponse();
     const createdEvent = { id: 1, ...req.body };
