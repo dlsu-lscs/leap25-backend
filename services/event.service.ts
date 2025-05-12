@@ -444,8 +444,9 @@ export async function getEventsByDay(day: number): Promise<Event[] | null> {
   // padded_day ensures that the day starts with a '0'
   const padded_day = String(day).padStart(2, '0');
 
+  // non dynamic time (we will input the month later on then the day will be based on querty)
   const day_start = `2025-05-${padded_day} 00:00:00`;
-  const day_end = `2025-05-${padded_day} 00:00:00`;
+  const day_end = `2025-05-${padded_day} 23:59:59`;
 
   const events = await db.query(
     'SELECT * FROM events WHERE schedule >= ? AND schedule <= ?',
@@ -453,8 +454,8 @@ export async function getEventsByDay(day: number): Promise<Event[] | null> {
   );
 
   if ((events as any[]).length === 0) {
-    throw new Error('Error getting event by day');
+    return null;
   }
 
-  return events as any[] as Event[];
+  return (events as any[])[0];
 }
