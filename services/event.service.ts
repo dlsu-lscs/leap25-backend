@@ -426,3 +426,35 @@ export async function verifyAllEventSlotsConsistency(): Promise<void> {
     console.error('Error during event slots consistency check:', error);
   }
 }
+
+export async function getEventByCode(code: string): Promise<Event | null> {
+  const db = await getDB();
+  const events = await db.query('SELECT * FROM events WHERE code = ?', [code]);
+
+  if ((events as any[]).length === 0) {
+    throw new Error('Error getting event by code.');
+  }
+
+  return (events as any[])[0] as Event;
+}
+
+export async function getEventsByDay(day: number): Promise<Event[] | null> {
+  const db = await getDB();
+
+  // padded_day ensures that the day starts with a '0'
+  const padded_day = String(day).padStart(2, '0');
+
+  const day_start = `2025-05-${padded_day} 00:00:00`;
+  const day_end = `2025-05-${padded_day} 00:00:00`;
+
+  const events = await db.query(
+    'SELECT * FROM events WHERE schedule >= ? AND schedule <= ?',
+    [day_start, day_end]
+  );
+
+  if ((events as any[]).length === 0) {
+    throw new Error('Error getting event by day');
+  }
+
+  return events as any[] as Event[];
+}

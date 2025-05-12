@@ -174,3 +174,18 @@ export async function deleteSubthemeContentful(
 
   return deleted_subtheme;
 }
+
+export async function getSubthemeByName(
+  name: string
+): Promise<Subtheme | null> {
+  const db = await getDB();
+  const [subthemes] = await db.query('SELET * FROM subthemes WHERE name = ?', [
+    name,
+  ]);
+
+  if ((subthemes as any[]).length === 0) {
+    throw new Error('Subtheme not found by name.');
+  }
+
+  return (subthemes as any[])[0] as Subtheme;
+}

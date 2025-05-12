@@ -27,6 +27,13 @@ export async function getUserById(id: number): Promise<User | null> {
   return users[0] || null;
 }
 
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const db = await getDB();
+  const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+  const users = rows as User[];
+  return users[0] || null;
+}
+
 export async function updateUser(
   id: number,
   data: UpdateUser

@@ -8,7 +8,22 @@ export async function getAllSubthemes(
   next: NextFunction
 ): Promise<void> {
   try {
-    console.log(req.body);
+    const name = req.query.name as string;
+
+    if (name) {
+      const name = req.query.name as string;
+
+      const subtheme = await SubthemeService.getSubthemeByName(name);
+
+      if (!subtheme) {
+        res.status(404).json({ error: 'Subtheme not found by name.' });
+        return;
+      }
+
+      res.status(200).json(subtheme);
+      return;
+    }
+
     const subthemes = await SubthemeService.getAllSubthemes();
     res.status(200).json(subthemes);
   } catch (error) {
