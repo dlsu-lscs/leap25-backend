@@ -179,6 +179,7 @@ export async function getSubthemeByName(
   name: string
 ): Promise<Subtheme | null> {
   const db = await getDB();
+
   const [subthemes] = await db.query(
     'SELECT * FROM subthemes WHERE title = ?',
     [name]
