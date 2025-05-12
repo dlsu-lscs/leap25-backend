@@ -448,7 +448,7 @@ export async function getEventsByDay(day: number): Promise<Event[] | null> {
   const day_start = `2025-05-${padded_day} 00:00:00`;
   const day_end = `2025-05-${padded_day} 23:59:59`;
 
-  const events = await db.query(
+  const [events] = await db.query(
     'SELECT * FROM events WHERE schedule >= ? AND schedule <= ?',
     [day_start, day_end]
   );
@@ -457,5 +457,5 @@ export async function getEventsByDay(day: number): Promise<Event[] | null> {
     return null;
   }
 
-  return (events as any[])[0];
+  return events as Event[];
 }
