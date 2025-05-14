@@ -472,6 +472,7 @@ export async function getEventsByDay(day: number): Promise<Event[] | null> {
   }
 
   return events as Event[];
+
 }
 
 export async function getEventBySlug(slug: string): Promise<Event | null> {
