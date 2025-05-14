@@ -320,3 +320,24 @@ export async function getEventSlots(
     next(error);
   }
 }
+
+export async function getEventBySlug(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const slug = req.params.slug as string;
+    const event = await EventService.getEventBySlug(slug);
+
+    if (!event) {
+      res.status(404).json({ message: `No event matches the slug: ${slug}` });
+      return;
+    }
+
+    res.status(200).json(event);
+  } catch (error) {
+    console.error((error as Error).message);
+    next(error);
+  }
+}
