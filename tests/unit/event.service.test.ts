@@ -182,6 +182,20 @@ describe('EventService Unit Tests', () => {
     expect(result).toBeNull();
   });
 
+  it('should get event by slug', async () => {
+    const mockEvent = { slug: 'test-event', title: 'test Event' };
+    mockDb.query.mockResolvedValueOnce([mockEvent]);
+
+    const result = await EventService.getEventBySlug('test-event');
+
+    expect(mockDb.query).toHaveBeenCalledWith(
+      'SELECT * FROM events WHERE slug = ?',
+      ['test-event']
+    );
+
+    expect(result).toEqual(mockEvent);
+  });
+
   it('should update an event', async () => {
     // Setup
     const eventId = 1;
