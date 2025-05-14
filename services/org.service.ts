@@ -49,11 +49,10 @@ export async function getAllOrgs(): Promise<Org[]> {
   return rows as Org[];
 }
 
-export async function getOrgById(id: number): Promise<Org | null> {
+export async function getOrgById(id: number): Promise<Org[]> {
   const db = await getDB();
   const [rows] = await db.query('SELECT * FROM orgs WHERE id = ?', [id]);
-  const orgs = rows as Org[];
-  return orgs[0] || null;
+  return rows as Org[];
 }
 
 export async function updateOrg(
@@ -61,9 +60,10 @@ export async function updateOrg(
   data: UpdateOrg
 ): Promise<Org | null> {
   const existingOrg = await getOrgById(id);
-  if (!existingOrg) return null;
+  if (!existingOrg[0]) return null;
 
-  const { name = existingOrg.name, org_logo = existingOrg.org_logo } = data;
+  const { name = existingOrg[0].name, org_logo = existingOrg[0].org_logo } =
+    data;
   const db = await getDB();
   await db.execute('UPDATE orgs SET name = ?, org_logo = ? WHERE id = ?', [
     name,
@@ -71,14 +71,19 @@ export async function updateOrg(
     id,
   ]);
 
-  return getOrgById(id);
+  const updated_org = await getOrgById(id);
+
+  if (!updated_org[0]) {
+    return null;
+  }
+
+  return updated_org[0];
 }
 
 export async function updateOrgPayload(
   payload: any
 ): Promise<UpdateOrg | null> {
   const fields = payload.fields;
-  const db = await getDB();
 
   const org_logo_id = fields.org_logo?.['en-US']?.sys?.id;
   const org_logo = org_logo_id ? await getImageUrlById(org_logo_id) : null;
@@ -95,12 +100,9 @@ export async function updateOrgPayload(
     org_logo: org_logo || existing_org.org_logo,
   };
 
-  const [orgs] = (await db.execute(
-    'SELECT id FROM orgs WHERE contentful_id = ?',
-    [contentful_id]
-  )) as any[];
+  const orgs = await getOrgByContentfulId(contentful_id);
 
-  if (orgs.length === 0) {
+  if (!orgs[0]) {
     return null;
   }
 
@@ -119,12 +121,8 @@ export async function handleContentfulWebhook(payload: any): Promise<{
   is_created: boolean;
 }> {
   const contentful_id = payload.sys.id;
-  const db = await getDB();
 
-  const [orgs] = (await db.execute(
-    'SELECT contentful_id FROM orgs WHERE contentful_id = ?',
-    [contentful_id]
-  )) as any[];
+  const orgs = await getOrgByContentfulId(contentful_id);
 
   const is_exists: boolean = orgs.length > 0;
 
@@ -137,26 +135,26 @@ export async function handleContentfulWebhook(payload: any): Promise<{
 
 export async function getOrgByContentfulId(
   contentful_id: string
-): Promise<Org | null> {
+): Promise<Org[]> {
   const db = await getDB();
   const [orgs] = await db.query('SELECT * FROM orgs WHERE contentful_id = ?', [
     contentful_id,
   ]);
-  return (orgs as Org[])[0] || null;
+  return orgs as Org[];
 }
 
-export async function deleteOrgContentful(payload: any): Promise<Org | null> {
+export async function deleteOrgContentful(payload: any): Promise<Org[] | null> {
   const contentful_id = payload.sys.id;
 
   const org = await getOrgByContentfulId(contentful_id);
 
-  if (!org) {
+  if (!org[0]) {
     throw new Error('Org not found in database using contentful id.');
   }
 
-  await deleteOrg(org.id);
+  await deleteOrg(org[0].id);
 
-  const deleted_org = await getOrgById(org.id);
+  const deleted_org = await getOrgById(org[0].id);
 
   return deleted_org;
 }
