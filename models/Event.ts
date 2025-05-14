@@ -11,6 +11,8 @@ export interface Event {
   registered_slots: number;
   max_slots: number;
   contentful_id: string;
+  slug: string;
+  gforms_url: string;
 }
 
 export interface CreateEvent {
@@ -25,6 +27,8 @@ export interface CreateEvent {
   registered_slots?: number;
   max_slots: number;
   contentful_id: string;
+  slug: string;
+  gforms_url: string;
 }
 
 export interface UpdateEvent {
@@ -38,4 +42,6 @@ export interface UpdateEvent {
   code?: string;
   registered_slots?: number;
   max_slots?: number;
+  slug?: string;
+  gforms_url?: string;
 }

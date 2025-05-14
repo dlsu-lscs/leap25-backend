@@ -94,6 +94,8 @@ describe('EventService Unit Tests', () => {
       registered_slots: 0,
       max_slots: 50,
       contentful_id: 'abc123',
+      slug: 'test-event',
+      gforms_url: 'http://test-gforms.com',
     };
 
     const mockResult = [{ insertId: 1 }];
@@ -104,7 +106,7 @@ describe('EventService Unit Tests', () => {
 
     // Assert
     expect(mockDb.execute).toHaveBeenCalledWith(
-      'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id, slug, gforms_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         mockEvent.org_id ?? null,
         mockEvent.title ?? null,
@@ -117,6 +119,8 @@ describe('EventService Unit Tests', () => {
         mockEvent.registered_slots ?? null,
         mockEvent.max_slots ?? null,
         mockEvent.contentful_id ?? null,
+        mockEvent.slug ?? null,
+        mockEvent.gforms_url ?? null,
       ]
     );
 
@@ -194,6 +198,8 @@ describe('EventService Unit Tests', () => {
       code: 'OLD123',
       registered_slots: 0,
       max_slots: 100,
+      slug: 'test-event',
+      gforms_url: 'http://test-gforms.com',
     };
 
     const updateData = {
@@ -215,7 +221,7 @@ describe('EventService Unit Tests', () => {
 
     // Assert
     expect(mockDb.execute).toHaveBeenCalledWith(
-      'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ? WHERE id = ?',
+      'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ?, slug = ?, gforms_url = ? WHERE id = ?',
       [
         existingEvent.org_id,
         updateData.title,
@@ -227,6 +233,8 @@ describe('EventService Unit Tests', () => {
         existingEvent.code,
         existingEvent.registered_slots,
         existingEvent.max_slots,
+        existingEvent.slug,
+        existingEvent.gforms_url,
         eventId,
       ]
     );

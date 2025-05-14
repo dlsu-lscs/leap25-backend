@@ -20,10 +20,12 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
     registered_slots = 0,
     max_slots,
     contentful_id,
+    slug,
+    gforms_url,
   } = data;
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id, slug, gforms_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       org_id,
       title,
@@ -36,6 +38,8 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
       registered_slots,
       max_slots,
       contentful_id,
+      slug,
+      gforms_url,
     ]
   );
 
@@ -53,6 +57,8 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
     registered_slots: registered_slots ?? 0,
     max_slots,
     contentful_id,
+    slug,
+    gforms_url,
   };
 
   // initialize Redis cache for this new event
@@ -113,6 +119,8 @@ export async function createEventPayload(
     registered_slots: max_slots - available_slots,
     max_slots: max_slots,
     contentful_id: payload.sys.id,
+    slug: fields.slug?.['en-US'],
+    gforms_url: fields.gforms_url?.['en-US'],
   };
 
   return await createEvent(event);
@@ -178,10 +186,12 @@ export async function updateEvent(
     code = existingEvent.code,
     registered_slots = existingEvent.registered_slots,
     max_slots = existingEvent.max_slots,
+    slug = existingEvent.slug,
+    gforms_url = existingEvent.gforms_url,
   } = data;
 
   await db.execute(
-    'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ? WHERE id = ?',
+    'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ?, slug = ?, gforms_url = ? WHERE id = ?',
     [
       org_id,
       title,
@@ -193,6 +203,8 @@ export async function updateEvent(
       code,
       registered_slots,
       max_slots,
+      slug,
+      gforms_url,
       id,
     ]
   );
@@ -261,6 +273,8 @@ export async function updateEventPayload(payload: any): Promise<Event | null> {
     code: fields.code?.['en-US'],
     registered_slots: max_slots - available_slots,
     max_slots: max_slots,
+    slug: fields.slug?.['en-US'],
+    gforms_url: fields.gforms_url?.['en-US'],
   };
 
   const [events] = (await db.query(
@@ -432,7 +446,7 @@ export async function getEventByCode(code: string): Promise<Event | null> {
   const events = await db.query('SELECT * FROM events WHERE code = ?', [code]);
 
   if ((events as any[]).length === 0) {
-    throw new Error('Error getting event by code.');
+    return null;
   }
 
   return (events as any[])[0] as Event;
@@ -445,8 +459,8 @@ export async function getEventsByDay(day: number): Promise<Event[] | null> {
   const padded_day = String(day).padStart(2, '0');
 
   // non dynamic time (we will input the month later on then the day will be based on querty)
-  const day_start = `2025-05-${padded_day} 00:00:00`;
-  const day_end = `2025-05-${padded_day} 23:59:59`;
+  const day_start = `2025-06-${padded_day} 00:00:00`;
+  const day_end = `2025-06-${padded_day} 23:59:59`;
 
   const [events] = await db.query(
     'SELECT * FROM events WHERE schedule >= ? AND schedule <= ?',
