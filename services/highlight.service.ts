@@ -44,6 +44,12 @@ export async function createHighlight(
   return getHighlightByContentfulId(contentful_id);
 }
 
+export async function createHighlightPayload(
+  payload: any
+): Promsie<CreateHighlight> {
+  const fields = payload.fields;
+}
+
 export async function updateHighlight(
   data: UpdateHighlight,
   contentful_id: string
@@ -92,4 +98,16 @@ export async function getHighlightByContentfulId(
   if ((highlights as any[]).length === 0) return null;
 
   return (highlights as Highlight[])[0] as Highlight;
+}
+
+export async function deleteHighlightByContentfulId(
+  contentful_id: string
+): Promise<boolean> {
+  const db = await getDB();
+  const [highlights] = await db.execute<mysql.ResultSetHeader>(
+    'DELETE FROM highlights WHERE contentful_id = ?',
+    [contentful_id]
+  );
+
+  return highlights.affectedRows > 0;
 }

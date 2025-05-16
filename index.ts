@@ -51,10 +51,6 @@ const startServer = async (): Promise<void> => {
     await configureSession(app);
     console.log('Session configured');
 
-    // TODO: not needed i think?
-    app.use(passport.initialize());
-    app.use(passport.session());
-
     // init event cache in Redis
     await initializeEventCache();
 
