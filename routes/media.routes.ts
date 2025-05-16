@@ -7,6 +7,6 @@ import {
 const router = Router();
 
 router.post('/event', handleEventMediaContentfulWebhook);
-router.delete('/event', deleteEventMediaContentfulController);
+router.post('/event/delete', deleteEventMediaContentfulController);
 
 export default router;
