@@ -486,3 +486,15 @@ export async function getEventBySlug(slug: string): Promise<Event | null> {
 
   return (events as any[])[0] as Event;
 }
+
+export async function getEventBySlug(slug: string): Promise<Event | null> {
+  const db = await getDB();
+
+  const events = await db.query('SELECT * FROM events WHERE slug = ?', [slug]);
+
+  if ((events as any[]).length === 0) {
+    return null;
+  }
+
+  return (events as any[])[0] as Event;
+}
