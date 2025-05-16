@@ -259,6 +259,9 @@ export async function deleteEventContentful(
   res: Response
 ): Promise<void> {
   try {
+    console.log('✅ deleteEventContentful hit');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
     const secret = req.headers['contentful-webhook-secret'];
 
     if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
@@ -317,6 +320,27 @@ export async function getEventSlots(
     res.status(200).json(slots);
   } catch (error) {
     console.error(error);
+    next(error);
+  }
+}
+
+export async function getEventBySlug(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const slug = req.params.slug as string;
+    const event = await EventService.getEventBySlug(slug);
+
+    if (!event) {
+      res.status(404).json({ message: `No event matches the slug: ${slug}` });
+      return;
+    }
+
+    res.status(200).json(event);
+  } catch (error) {
+    console.error((error as Error).message);
     next(error);
   }
 }

@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS orgs (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   org_logo TEXT,
+  contentful_id VARCHAR(80) NOT NULL
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS subthemes (
   title VARCHAR(255) NOT NULL,
   logo_pub_url TEXT,
   background_pub_url TEXT,
+  contentful_id VARCHAR(80) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -48,6 +50,9 @@ CREATE TABLE IF NOT EXISTS events (
   code VARCHAR(50) NOT NULL,
   registered_slots INT DEFAULT 0,
   max_slots INT NOT NULL,
+  contentful_id VARCHAR(80) NOT NULL,
+  slug VARCHAR(80) NOT NULL,
+  gforms_url TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE,
@@ -66,3 +71,29 @@ CREATE TABLE IF NOT EXISTS registrations (
   FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
   UNIQUE KEY (user_id, event_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Highlight Events table
+CREATE TABLE highlights (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    title_card TEXT,
+    title_fallback VARCHAR(80) NOT NULL,
+    bg_img TEXT,
+    short_desc VARCHAR(255) NOT NULL,
+    color VARCHAR(50) NOT NULL,
+    contentful_id VARCHAR(80) NOT NULL,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE event_pubs (
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    event_id INT(11),
+    pub_type ENUM('TEXTLESS_VERTICAL','TEXTLESS_HORIZONTAL','MAIN') NOT NULL,
+    pub_url TEXT,
+    contentful_id VARCHAR(80) NOT NULL,
+    FOREIGN KEY event_id (event_id)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
