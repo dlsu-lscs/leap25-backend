@@ -50,9 +50,8 @@ export async function createEventMediaContentful(
     if (!event)
       throw new Error(`Event not found with contentful_id = ${event_ref}`);
 
-    if (!pub_url || !event.id) {
+    if (!pub_url || !event.id)
       throw new Error('Error in getting publication asset.');
-    }
 
     const event_media = {
       pub_url,
