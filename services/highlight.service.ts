@@ -46,8 +46,20 @@ export async function createHighlight(
 
 export async function createHighlightPayload(
   payload: any
-): Promsie<CreateHighlight> {
+): Promsie<CreateHighlight | null> {
   const fields = payload.fields;
+  const contentful_id = payload.sys.id;
+  const event_id = await getEventByContentfulId(fields.eventRef?.['en-US']?.sys?.id);
+
+  if (!event_id) {
+    return null;
+  }
+
+  const highlight: CreateHighlight = {
+    event_id,
+    title_card: fields.
+
+  }
 }
 
 export async function updateHighlight(
