@@ -36,13 +36,16 @@ export async function createHighlight(
     ]
   );
 
-  if (highlights.affectedRows === 0) {
-    throw new Error(
-      `Highlight event creation error with contentful_id: ${contentful_id}`
-    );
-  }
-
-  return getHighlightByContentfulId(contentful_id);
+  return {
+    id: highlights.insertId,
+    event_id,
+    title_card,
+    title_fallback,
+    bg_img,
+    short_desc,
+    color,
+    contentful_id,
+  };
 }
 
 export async function createHighlightPayload(
@@ -62,7 +65,7 @@ export async function createHighlightPayload(
 export async function updateHighlight(
   data: UpdateHighlight,
   contentful_id: string
-): Promise<Highlight> {
+): Promise<Highlight | null> {
   const db = await getDB();
   const { event_id, title_card, title_fallback, bg_img, short_desc, color } =
     data;
@@ -81,18 +84,12 @@ export async function updateHighlight(
   );
 
   if (result.affectedRows === 0) {
-    throw new Error(
-      `Highlight with contentful_id ${contentful_id} not found or no changes made.`
-    );
+    return null;
   }
 
-  const updatedHighlight = await getHighlightByContentfulId(contentful_id);
+  const highlight = await getHighlightByContentfulId(contentful_id);
 
-  if (!updatedHighlight) {
-    throw new Error('Updated highlight could not be retrieved.');
-  }
-
-  return updatedHighlight;
+  return highlight;
 }
 
 export async function updateHighlightPayload(
@@ -229,7 +226,7 @@ export function validatePayload({
   const is_valid =
     payload?.sys?.type === 'DeletedEntry' &&
     payload?.sys?.environment?.sys?.id === 'master' &&
-    payload?.sys?.contentType?.sys?.id === 'org';
+    payload?.sys?.contentType?.sys?.id === 'highlightEvents';
 
   if (!is_valid) {
     return false;
