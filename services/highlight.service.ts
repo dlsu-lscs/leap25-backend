@@ -205,16 +205,14 @@ const getPayloadFields = async function (
   };
 };
 
-export async function deleteOrgContentful(
+export async function deleteHighlightContentful(
   payload: any
-): Promise<Highlight | null> {
+): Promise<boolean> {
   const contentful_id = payload.sys.id;
 
-  await deleteHighlightByContentfulId(contentful_id);
+  const is_deleted = await deleteHighlightByContentfulId(contentful_id);
 
-  const deleted_highlight = await getHighlightByContentfulId(contentful_id);
-
-  return deleted_highlight;
+  return is_deleted;
 }
 
 export function validatePayload({

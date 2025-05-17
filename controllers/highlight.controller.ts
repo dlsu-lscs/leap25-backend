@@ -158,7 +158,7 @@ export async function deleteHighlightContentful(
     }
 
     const deleted_highlight =
-      await HighlightService.deleteOrgContentful(payload);
+      await HighlightService.deleteHighlightContentful(payload);
 
     if (deleted_highlight) {
       res.status(500).json({
@@ -169,6 +169,32 @@ export async function deleteHighlightContentful(
 
     res.status(200).json({
       message: `Highlight deleted with contentful_id: ${payload.sys.id}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteHighlightByContentfulId(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const contentful_id = req.params.contentful_id as string;
+
+    const is_deleted =
+      await HighlightService.deleteHighlightByContentfulId(contentful_id);
+
+    if (!is_deleted) {
+      res.status(500).json({
+        message: `Error deleting highlight with contentful_id: ${contentful_id}`,
+      });
+      return;
+    }
+
+    res.status(200).json({
+      message: `Deleted highlight with contentful_id: ${contentful_id}`,
     });
   } catch (error) {
     next(error);
