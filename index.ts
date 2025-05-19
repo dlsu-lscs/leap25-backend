@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import passport from 'passport';
 import { urlencoded, json } from 'express';
 import 'dotenv/config';
 
@@ -30,8 +29,8 @@ import {
 //   target: 'http://localhost:3000',
 //   logger: console,
 // });
-
-const events = smee.start();
+//
+// const events = smee.start();
 
 validateEnvironment();
 

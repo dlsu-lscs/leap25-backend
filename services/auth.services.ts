@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import type { User } from '../models/User';
+import { createUser } from './user.service';
 
 export async function googleAuth2(
   accessToken: string
@@ -25,6 +26,8 @@ export async function googleAuth2(
       name: payload.name,
       display_picture: payload.picture,
     };
+
+    await createUser(user);
 
     const jwt_token = jwt.sign(user, process.env.JWT_SECRET as string, {
       expiresIn: '30d',
