@@ -406,44 +406,44 @@ export async function getEventAvailableSlots(
 }
 
 // Additional functions
-export async function initializeRedisEventCache(): Promise<void> {
-  try {
-    if (!isRedisReady()) {
-      console.log('Redis not connected, skipping event cache initialization');
-      return;
-    }
-    console.log('Initializing Redis event cache...');
-    const events = await getAllEvents();
-    await redisEventOps.initializeEventSlots(events);
-  } catch (error) {
-    console.error('Failed to initialize Redis event cache:', error);
-  }
-}
-
-export async function verifyAllEventSlotsConsistency(): Promise<void> {
-  if (!isRedisReady()) {
-    return;
-  }
-
-  try {
-    const events = await getAllEvents();
-    let fixed = 0;
-
-    for (const event of events) {
-      const isConsistent = await redisEventOps.verifyEventSlotsConsistency(
-        event.id,
-        event
-      );
-      if (!isConsistent) fixed++;
-    }
-
-    if (fixed > 0) {
-      console.log(`Fixed ${fixed} inconsistent event slot records in Redis`);
-    }
-  } catch (error) {
-    console.error('Error during event slots consistency check:', error);
-  }
-}
+// export async function initializeRedisEventCache(): Promise<void> {
+//   try {
+//     if (!isRedisReady()) {
+//       console.log('Redis not connected, skipping event cache initialization');
+//       return;
+//     }
+//     console.log('Initializing Redis event cache...');
+//     const events = await getAllEvents();
+//     await redisEventOps.initializeEventSlots(events);
+//   } catch (error) {
+//     console.error('Failed to initialize Redis event cache:', error);
+//   }
+// }
+//
+// export async function verifyAllEventSlotsConsistency(): Promise<void> {
+//   if (!isRedisReady()) {
+//     return;
+//   }
+//
+//   try {
+//     const events = await getAllEvents();
+//     let fixed = 0;
+//
+//     for (const event of events) {
+//       const isConsistent = await redisEventOps.verifyEventSlotsConsistency(
+//         event.id,
+//         event
+//       );
+//       if (!isConsistent) fixed++;
+//     }
+//
+//     if (fixed > 0) {
+//       console.log(`Fixed ${fixed} inconsistent event slot records in Redis`);
+//     }
+//   } catch (error) {
+//     console.error('Error during event slots consistency check:', error);
+//   }
+// }
 
 export async function getEventByCode(code: string): Promise<Event | null> {
   const db = await getDB();

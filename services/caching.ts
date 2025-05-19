@@ -1,4 +1,9 @@
-import { redisEventOps, isRedisReady } from '../config/redis';
+import {
+  REDIS_KEYS,
+  redisEventOps,
+  isRedisReady,
+  getRedisClient,
+} from '../config/redis';
 import { getAllEvents } from './event.service';
 
 /**
@@ -13,12 +18,24 @@ export const initializeEventCache = async (): Promise<void> => {
   try {
     console.log('Initializing Redis event cache...');
     const events = await getAllEvents();
+    const client = getRedisClient()!;
 
-    // process in batches for better performance
+    // PERF: process batches of 100 for better performance
     const batchSize = 100;
     for (let i = 0; i < events.length; i += batchSize) {
       const batch = events.slice(i, i + batchSize);
-      await redisEventOps.initializeEventSlots(batch);
+      const pipeline = client.multi();
+
+      // await redisEventOps.initializeEventSlots(batch);
+      for (const event of batch) {
+        const available = event.max_slots - event.registered_slots;
+        const key = REDIS_KEYS.eventSlots(event.id);
+        const data = JSON.stringify({ available, total: event.max_slots });
+        pipeline.setEx(key, 300, data);
+      }
+
+      await pipeline.exec();
+      console.log(`Initialized batch of ${batch.length} events in Redis cache`);
 
       // small delay between batches to avoid Redis overload
       if (i + batchSize < events.length) {
