@@ -30,8 +30,8 @@ import {
 //   target: 'http://localhost:3000',
 //   logger: console,
 // });
-
-const events = smee.start();
+//
+// const events = smee.start();
 
 validateEnvironment();
 
