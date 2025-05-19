@@ -103,6 +103,7 @@ export const REDIS_KEYS = {
 // Helper functions for event slots operations
 export const redisEventOps = {
   // initialize all event slots in Redis
+  // DEPRECATED in favor of synchronous processing of batch rather than async (see services/caching.ts)
   initializeEventSlots: async (events: Event[]): Promise<void> => {
     try {
       if (!isRedisReady()) {
@@ -232,39 +233,56 @@ export const redisEventOps = {
 
   // update slots after registration (atomically decrement available slots)
   updateSlotsAfterRegistration: async (eventId: number): Promise<void> => {
-    try {
-      if (!isRedisReady()) return;
+    if (!isRedisReady()) return;
 
-      const client = getRedisClient()!;
-      const cachedData = await client.get(REDIS_KEYS.eventSlots(eventId));
-      if (cachedData) {
-        const data = JSON.parse(cachedData);
-        if (data.available > 0) {
-          data.available -= 1;
-          await client.setEx(
-            REDIS_KEYS.eventSlots(eventId),
-            300, // 5 minutes TTL
-            JSON.stringify(data)
+    const retries = 3;
+    let attempt = 0;
+
+    while (attempt < retries) {
+      try {
+        const client = getRedisClient()!;
+        const cachedData = await client.get(REDIS_KEYS.eventSlots(eventId));
+
+        if (cachedData) {
+          const data = JSON.parse(cachedData);
+          if (data.available > 0) {
+            data.available -= 1;
+            await client.setEx(
+              REDIS_KEYS.eventSlots(eventId),
+              300, // 5 minutes TTL
+              JSON.stringify(data)
+            );
+          }
+        }
+
+        return; // success
+      } catch (error) {
+        attempt++;
+        console.error(
+          `Redis updateSlotsAfterRegistration error for event ${eventId}:`,
+          error
+        );
+
+        // exponential backoff
+        if (attempt < retries) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, 100 * Math.pow(2, attempt))
           );
         }
       }
-    } catch (error) {
-      console.error(
-        `Redis updateSlotsAfterRegistration error for event ${eventId}:`,
-        error
-      );
-      // invalidate cache to force refresh from DB on next read
-      try {
-        const client = getRedisClient();
-        if (client) {
-          await client.del(REDIS_KEYS.eventSlots(eventId));
-        }
-      } catch (delError) {
-        console.error(
-          `Failed to invalidate Redis cache for event ${eventId}:`,
-          delError
-        );
+    }
+
+    // if all retries fail, then invalidate cache to force refresh from DB
+    try {
+      const client = getRedisClient();
+      if (client) {
+        await client.del(REDIS_KEYS.eventSlots(eventId));
       }
+    } catch (delError) {
+      console.error(
+        `Failed to invalidate Redis cache for event ${eventId}:`,
+        delError
+      );
     }
   },
 
