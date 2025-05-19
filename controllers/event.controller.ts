@@ -348,3 +348,25 @@ export async function getEventBySlug(
     next(error);
   }
 }
+
+export async function getEventBySearch(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const search = req.body;
+
+    const events: Event[] | null = (await EventService.getEventBySearch(
+      search
+    )) as Event[] | null;
+
+    if (!events) {
+      res.status(404).json({ message: `No events found with name: ${search}` });
+    }
+
+    res.status(200).json(events);
+  } catch (error) {
+    next(error);
+  }
+}

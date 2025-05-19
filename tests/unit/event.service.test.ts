@@ -303,4 +303,29 @@ describe('EventService Unit Tests', () => {
       [eventId]
     );
   });
+
+  it('should search for an event', async () => {
+    const search = 'mock';
+    const mock_events = [
+      { id: 1, title: 'mock event', org_id: 1 },
+      { id: 2, title: 'event, mock', org_id: 2 },
+    ];
+
+    mockDb.query.mockResolvedValueOnce(mock_events);
+
+    const result = await EventService.getEventBySearch(search);
+
+    expect(mockDb.query).toHaveBeenCalledWith(
+      'SELECT * FROM events WHERE title LIKE ?',
+      [`%${search}%`]
+    );
+    expect(result).toEqual([
+      {
+        id: 1,
+        title: 'mock event',
+        org_id: 1,
+      },
+      { id: 2, title: 'event, mock', org_id: 2 },
+    ]);
+  });
 });

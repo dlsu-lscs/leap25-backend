@@ -12,6 +12,7 @@ router.get('/slug/:id', eventController.getEventBySlug);
 
 // get routes with suffixes (ft. subtheme)
 router.post('/subtheme', eventController.getEventBySubtheme);
+router.get('/search', eventController.getEventBySearch);
 router.get('/:id/media', eventController.getEventMedia);
 router.get('/:eventId/slots', eventController.getEventSlots);
 

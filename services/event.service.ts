@@ -485,3 +485,20 @@ export async function getEventBySlug(slug: string): Promise<Event | null> {
 
   return (events as any[])[0] as Event;
 }
+
+export async function getEventBySearch(
+  search: string
+): Promise<Event[] | null> {
+  const db = await getDB();
+  const pattern = `%${search}%`;
+
+  const events = await db.query('SELECT * FROM events WHERE title LIKE ?', [
+    pattern,
+  ]);
+
+  if ((events as any[]).length === 0) {
+    return null;
+  }
+
+  return events as any[];
+}
