@@ -171,7 +171,7 @@ export async function deleteHighlightByContentfulId(
   return highlights.affectedRows > 0;
 }
 
-const getPayloadFields = async function (
+export async function getPayloadFields(
   payload: any
 ): Promise<CreateHighlight | UpdateHighlight | null> {
   const fields = payload.fields;
@@ -193,14 +193,14 @@ const getPayloadFields = async function (
 
   return {
     event_id: event.id,
-    title_card,
+    title_card: title_card ?? '',
     title_fallback: fields.titleFallback?.['en-US'],
-    bg_img,
+    bg_img: bg_img ?? '',
     color: fields.color?.['en-US'],
     short_desc: fields.shortDesc?.['en-US'],
     contentful_id,
   };
-};
+}
 
 export async function deleteHighlightContentful(
   payload: any

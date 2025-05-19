@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as HighlightService from '../../services/highlight.service';
 import { getDB } from '../../config/database';
-import { getEventByContentfulId } from 'services/event.service';
 
 vi.mock('../../config/database', () => ({
   getDB: vi.fn().mockResolvedValue({
@@ -60,7 +59,6 @@ vi.mock('../../services/media.service', () => ({
 
 describe('HighlightService unit tests', () => {
   let mockDb: any;
-  const mock = {};
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -224,5 +222,260 @@ describe('HighlightService unit tests', () => {
       'DELETE FROM highlights WHERE contentful_id = ?',
       [contentful_id]
     );
+  });
+
+  it('should get the fields from the payload', async () => {
+    const payload = {
+      sys: {
+        id: '12345',
+      },
+      fields: {
+        eventRef: {
+          'en-US': {
+            sys: {
+              id: '123',
+            },
+          },
+        },
+        titleFallback: { 'en-US': 'Mock Title' },
+        shortDesc: { 'en-US': 'Mock short description' },
+        color: { 'en-US': 'mock-color' },
+        titleCard: {
+          'en-US': {
+            sys: {
+              type: 'Link',
+              linkType: 'Asset',
+              id: 'mock-title-card-id',
+            },
+          },
+        },
+        bgImg: {
+          'en-US': {
+            sys: {
+              type: 'Link',
+              linkType: 'Asset',
+              id: 'mock-bg-img-id',
+            },
+          },
+        },
+      },
+    };
+    const event = { id: 123 };
+    const result = await HighlightService.getPayloadFields(payload);
+
+    expect(result).toEqual({
+      event_id: event.id,
+      title_card: 'http://mock-img.com/mock-title-card-id.jpg',
+      title_fallback: 'Mock Title',
+      bg_img: 'http://mock-img.com/mock-bg-img-id.jpg',
+      color: 'mock-color',
+      short_desc: 'Mock short description',
+      contentful_id: '12345',
+    });
+  });
+
+  it('should create a new highlight from payload', async () => {
+    const payload = {
+      sys: {
+        id: '12345',
+      },
+      fields: {
+        eventRef: {
+          'en-US': {
+            sys: {
+              id: '123',
+            },
+          },
+        },
+        titleFallback: { 'en-US': 'Mock Title' },
+        shortDesc: { 'en-US': 'Mock short description' },
+        color: { 'en-US': 'mock-color' },
+        titleCard: {
+          'en-US': {
+            sys: {
+              type: 'Link',
+              linkType: 'Asset',
+              id: 'mock-title-card-id',
+            },
+          },
+        },
+        bgImg: {
+          'en-US': {
+            sys: {
+              type: 'Link',
+              linkType: 'Asset',
+              id: 'mock-bg-img-id',
+            },
+          },
+        },
+      },
+    };
+    const mock_result = { insertId: 1, affectedRows: 1 };
+    mockDb.execute.mockResolvedValueOnce([mock_result]);
+    const result = await HighlightService.createHighlightPayload(payload);
+
+    expect(result).toEqual({
+      id: 1,
+      event_id: 123,
+      title_card: 'http://mock-img.com/mock-title-card-id.jpg',
+      title_fallback: 'Mock Title',
+      bg_img: 'http://mock-img.com/mock-bg-img-id.jpg',
+      color: 'mock-color',
+      short_desc: 'Mock short description',
+      contentful_id: '12345',
+    });
+  });
+
+  it('should update a highlight from payload', async () => {
+    const payload = {
+      sys: {
+        id: '12345',
+      },
+      fields: {
+        eventRef: {
+          'en-US': {
+            sys: {
+              id: '123',
+            },
+          },
+        },
+        titleFallback: { 'en-US': 'Mock Title' },
+        shortDesc: { 'en-US': 'Mock short description' },
+        color: { 'en-US': 'mock-color' },
+        titleCard: {
+          'en-US': {
+            sys: {
+              type: 'Link',
+              linkType: 'Asset',
+              id: 'mock-title-card-id',
+            },
+          },
+        },
+        bgImg: {
+          'en-US': {
+            sys: {
+              type: 'Link',
+              linkType: 'Asset',
+              id: 'mock-bg-img-id',
+            },
+          },
+        },
+      },
+    };
+
+    const highlight = {
+      event_id: 123,
+      title_card: 'http://mock-img.com/mock-title-card-id.jpg',
+      title_fallback: 'Mock Title',
+      bg_img: 'http://mock-img.com/mock-bg-img-id.jpg',
+      color: 'mock-color',
+      short_desc: 'Mock short description',
+      contentful_id: '12345',
+    };
+
+    const mock_updated = {
+      id: 1,
+      ...highlight,
+    };
+
+    const mock_result = { insertId: 1, affectedRows: 1 };
+    mockDb.execute.mockResolvedValueOnce([mock_result]);
+    mockDb.query.mockResolvedValueOnce([
+      {
+        ...highlight,
+      },
+    ]);
+
+    vi.spyOn(HighlightService, 'getPayloadFields').mockImplementation(
+      async () => highlight
+    );
+
+    vi.spyOn(HighlightService, 'updateHighlightPayload').mockImplementation(
+      async () => mock_updated
+    );
+
+    const result = await HighlightService.updateHighlightPayload(payload);
+
+    expect(result).toEqual(mock_updated);
+  });
+
+  it('should handle contentful webhook between create and update', async () => {
+    const payload = {
+      sys: {
+        id: '12345',
+      },
+      fields: {
+        eventRef: {
+          'en-US': {
+            sys: {
+              id: '123',
+            },
+          },
+        },
+        titleFallback: { 'en-US': 'Mock Title' },
+        shortDesc: { 'en-US': 'Mock short description' },
+        color: { 'en-US': 'mock-color' },
+        titleCard: {
+          'en-US': {
+            sys: {
+              type: 'Link',
+              linkType: 'Asset',
+              id: 'mock-title-card-id',
+            },
+          },
+        },
+        bgImg: {
+          'en-US': {
+            sys: {
+              type: 'Link',
+              linkType: 'Asset',
+              id: 'mock-bg-img-id',
+            },
+          },
+        },
+      },
+    };
+
+    const highlight = {
+      id: 1,
+      event_id: 123,
+      title_card: 'http://mock-img.com/mock-title-card-id.jpg',
+      title_fallback: 'Mock Title',
+      bg_img: 'http://mock-img.com/mock-bg-img-id.jpg',
+      color: 'mock-color',
+      short_desc: 'Mock short description',
+      contentful_id: '12345',
+    };
+
+    vi.spyOn(HighlightService, 'getHighlightByContentfulId')
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(highlight);
+
+    vi.spyOn(HighlightService, 'getPayloadFields').mockResolvedValue(highlight);
+    vi.spyOn(HighlightService, 'createHighlight').mockResolvedValue(highlight);
+    vi.spyOn(HighlightService, 'updateHighlight').mockResolvedValue(highlight);
+
+    const result = await HighlightService.handleContentfulWebhook(payload);
+
+    expect(result).toEqual({
+      highlight: { ...highlight, id: 1 },
+      is_created: true,
+    });
+  });
+
+  it('should validate payload correctly', () => {
+    const payload = {
+      sys: {
+        type: 'DeletedEntry',
+        environment: { sys: { id: 'master' } },
+        contentType: { sys: { id: 'highlightEvents' } },
+      },
+    };
+
+    const secret = 'correct_secret';
+    process.env.CONTENTFUL_WEBHOOK_SECRET = 'correct_secret';
+
+    const result = HighlightService.validatePayload({ payload, secret });
+    expect(result).toBe(true);
   });
 });
