@@ -23,13 +23,13 @@ import {
   startConsistencyChecks,
 } from './services/caching';
 
-import SmeeClient from 'smee-client';
-
-const smee = new SmeeClient({
-  source: 'https://smee.io/hwM6of7BTKdhC7HY/',
-  target: 'http://localhost:3000',
-  logger: console,
-});
+// import SmeeClient from 'smee-client';
+//
+// const smee = new SmeeClient({
+//   source: 'https://smee.io/hwM6of7BTKdhC7HY/',
+//   target: 'http://localhost:3000',
+//   logger: console,
+// });
 
 const events = smee.start();
 
@@ -102,7 +102,7 @@ const setupGracefulShutdown = (timer: NodeJS.Timeout): void => {
     clearInterval(timer);
     await closeRedis();
     await closeDB();
-    events.close();
+    // events.close();
 
     console.log('All connections closed. Exiting process.');
     process.exit(0);
