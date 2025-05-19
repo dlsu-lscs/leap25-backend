@@ -5,7 +5,7 @@ const router = Router();
 
 // contentful routes
 router.post('/contentful', eventController.handleEventContentfulWebhook);
-router.delete('/contentful', eventController.deleteEventContentful);
+router.post('/contentful/delete', eventController.deleteEventContentful);
 
 // slug based routes
 router.get('/slug/:id', eventController.getEventBySlug);

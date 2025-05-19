@@ -36,6 +36,7 @@ export async function createHighlight(
     ]
   );
 
+
   return {
     id: highlights.insertId,
     event_id,

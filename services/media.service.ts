@@ -9,12 +9,12 @@ import type {
 import { getDB } from '../config/database';
 
 export async function createEventMedia(data: EventMedia): Promise<EventMedia> {
-  const { pub_url, pub_type, event_id, contentful_id } = data;
+  const { pub_url, event_id, contentful_id } = data;
   const db = await getDB();
 
   const [new_event_media] = (await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO event_pubs (pub_url, pub_type, event_id, contentful_id) VALUES (?, ?, ?, ?)',
-    [pub_url, pub_type, event_id, contentful_id]
+    'INSERT INTO event_pubs (pub_url,  event_id, contentful_id) VALUES (?, ?, ?)',
+    [pub_url, event_id, contentful_id]
   )) as any[];
 
   if (new_event_media.affectedRows === 0) {
@@ -55,7 +55,6 @@ export async function createEventMediaContentful(
 
     const event_media = {
       pub_url,
-      pub_type,
       event_id: event.id,
       contentful_id,
     };
@@ -73,12 +72,12 @@ export async function updateEventMedia(
   payload: UpdateEventMedia,
   contentful_id: string
 ): Promise<UpdateEventMedia> {
-  const { pub_url, pub_type } = payload;
+  const { pub_url } = payload;
   const db = await getDB();
 
   const [result] = (await db.execute<mysql.ResultSetHeader>(
-    'UPDATE event_pubs SET pub_url = ?, pub_type = ? WHERE contentful_id = ?',
-    [pub_url ?? null, pub_type, contentful_id]
+    'UPDATE event_pubs SET pub_url = ? WHERE contentful_id = ?',
+    [pub_url ?? null, contentful_id]
   )) as any[];
 
   if (result.affectedRows === 0) {

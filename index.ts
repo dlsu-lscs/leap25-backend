@@ -48,8 +48,8 @@ const startServer = async (): Promise<void> => {
     await initRedis();
     console.log('Redis initialized');
 
-    app.use(urlencoded({ extended: true }));
     app.use(json());
+    app.use(urlencoded({ extended: true }));
     app.use(
       cors({
         origin: process.env.CORS_ORIGIN || '*',

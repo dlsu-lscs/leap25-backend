@@ -259,6 +259,9 @@ export async function deleteEventContentful(
   res: Response
 ): Promise<void> {
   try {
+    console.log('✅ deleteEventContentful hit');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
     const secret = req.headers['contentful-webhook-secret'];
 
     if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
