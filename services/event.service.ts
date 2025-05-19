@@ -347,31 +347,35 @@ export async function getEventAvailableSlots(
 ): Promise<{ available: number; total: number } | null> {
   try {
     const cachedSlots = await redisEventOps.getEventSlots(eventId);
+    if (cachedSlots) {
+      return cachedSlots;
+    }
 
     // Get event values from db for checking
     const event = await getEventById(eventId);
     if (!event) return null;
 
+    // TODO: make reconciliation be in background jobs rather than real-time sync to prevent database hit on every request
     // Try to get from Redis first for better performance (cache hit)
-    if (cachedSlots) {
-      const dbAvailable = event.max_slots - event.registered_slots;
-
-      // If there's an inconsistency, update Redis with correct DB values
-      if (
-        cachedSlots.available !== dbAvailable ||
-        cachedSlots.total !== event.max_slots
-      ) {
-        const result = {
-          available: dbAvailable,
-          total: event.max_slots,
-        };
-
-        await redisEventOps.setEventSlots(eventId, result, 300);
-        return result;
-      }
-
-      return cachedSlots;
-    }
+    // if (cachedSlots) {
+    //   const dbAvailable = event.max_slots - event.registered_slots;
+    //
+    //   // If there's an inconsistency, update Redis with correct DB values
+    //   if (
+    //     cachedSlots.available !== dbAvailable ||
+    //     cachedSlots.total !== event.max_slots
+    //   ) {
+    //     const result = {
+    //       available: dbAvailable,
+    //       total: event.max_slots,
+    //     };
+    //
+    //     await redisEventOps.setEventSlots(eventId, result, 300);
+    //     return result;
+    //   }
+    //
+    //   return cachedSlots;
+    // }
 
     // If not in Redis, get from database (cache miss)
     const result = {
