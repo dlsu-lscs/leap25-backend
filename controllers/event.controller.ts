@@ -259,9 +259,6 @@ export async function deleteEventContentful(
   res: Response
 ): Promise<void> {
   try {
-    console.log('✅ deleteEventContentful hit');
-    console.log('Headers:', req.headers);
-    console.log('Body:', req.body);
     const secret = req.headers['contentful-webhook-secret'];
 
     if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
@@ -275,6 +272,10 @@ export async function deleteEventContentful(
       payload?.sys?.type === 'DeletedEntry' &&
       payload?.sys?.environment?.sys?.id === 'master' &&
       payload?.sys?.contentType?.sys?.id === 'events';
+
+    console.log('Payload type:', payload?.sys?.type);
+    console.log('Environment ID:', payload?.sys?.environment?.sys?.id);
+    console.log('ContentType ID:', payload?.sys?.contentType?.sys?.id);
 
     if (!is_valid) {
       res.status(400).json({ error: 'Invalid payload or content type.' });
@@ -341,6 +342,40 @@ export async function getEventBySlug(
     res.status(200).json(event);
   } catch (error) {
     console.error((error as Error).message);
+    next(error);
+  }
+}
+
+export async function getEventBySearch(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const search = req.query.q as string;
+
+    if (!search || typeof search !== 'string') {
+      res
+        .status(400)
+        .json({ message: 'Search query parameter "q" is required' });
+      return;
+    }
+
+    if (search.length > 100) {
+      res
+        .status(400)
+        .json({ message: 'Search query too long (max 100 characters)' });
+      return;
+    }
+
+    const events = await EventService.getEventBySearch(search);
+    if (!events) {
+      res.status(404).json({ message: `No events found with name: ${search}` });
+    }
+
+    res.status(200).json(events);
+  } catch (error) {
+    console.error('Search error:', error);
     next(error);
   }
 }

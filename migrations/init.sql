@@ -87,6 +87,7 @@ CREATE TABLE highlights (
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
 
+-- Event pubs table
 CREATE TABLE event_pubs (
     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     event_id INT(11),
@@ -97,3 +98,14 @@ CREATE TABLE event_pubs (
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
+
+-- User bookmarked events table
+CREATE TABLE bookmarks (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event_id INT NOT NULL,
+  user_id INT NOT NULL,
+  FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY (user_id, event_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

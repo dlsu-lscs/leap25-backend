@@ -26,4 +26,5 @@ export interface UpdateHighlight {
   bg_img?: string;
   short_desc?: string;
   color?: string;
+  contentful_id?: string;
 }

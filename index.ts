@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import passport from 'passport';
 import { urlencoded, json } from 'express';
 import 'dotenv/config';
 
@@ -17,11 +16,22 @@ import subthemeRouter from './routes/subtheme.routes';
 import mediaRouter from './routes/media.routes';
 import registrationRouter from './routes/registration.routes';
 import healthRouter from './routes/health.routes';
+import bookmarkRouter from './routes/bookmark.routes';
 
 import {
   initializeEventCache,
   startConsistencyChecks,
 } from './services/caching';
+
+// import SmeeClient from 'smee-client';
+//
+// const smee = new SmeeClient({
+//   source: 'https://smee.io/hwM6of7BTKdhC7HY/',
+//   target: 'http://localhost:3000',
+//   logger: console,
+// });
+
+// const events = smee.start();
 
 validateEnvironment();
 
@@ -65,6 +75,7 @@ const startServer = async (): Promise<void> => {
     app.use('/registrations', registrationRouter);
     app.use('/media', mediaRouter);
     app.use('/health', healthRouter);
+    app.use('/bookmarks', bookmarkRouter);
 
     app.get('/', (_, res) => {
       res.status(200).json({
@@ -92,6 +103,7 @@ const setupGracefulShutdown = (timer: NodeJS.Timeout): void => {
     clearInterval(timer);
     await closeRedis();
     await closeDB();
+    // events.close();
 
     console.log('All connections closed. Exiting process.');
     process.exit(0);

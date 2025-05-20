@@ -1,12 +1,6 @@
 import { getContentfulEnv } from '../config/contentful';
 import type { CreateOrg } from '../models/Org';
 
-/**
- * fetches an asset from contentful space by id
- *
- * @param id: string (contentful id of the img)
- * @return url: string (url of the img)
- */
 export async function getImageUrlById(id: string): Promise<string | null> {
   const client = await getContentfulEnv();
   try {
@@ -26,12 +20,6 @@ export async function getImageUrlById(id: string): Promise<string | null> {
   }
 }
 
-/**
- * gets org data from the contentful space
- *
- * @param id: string (conrtentful id of the org)
- * @return org: {name, org_logo, contentful_id}
- */
 export async function getOrg(id: string): Promise<CreateOrg | null> {
   const client = await getContentfulEnv();
   try {
