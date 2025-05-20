@@ -131,6 +131,7 @@ export async function getHighlights(): Promise<Highlight[]> {
   return highlights as Highlight[];
 }
 
+
 export async function getHighlightById(id: number): Promise<Highlight | null> {
   const db = await getDB();
 
