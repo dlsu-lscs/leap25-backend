@@ -1,0 +1,110 @@
+---
+name: Build, Push, and Deploy
+
+on:
+  workflow_run:
+    workflows: ["Test Workflow"]
+    branches: [main, staging]
+    types:
+      - completed
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      has_migrations: ${{ steps.check-migrations.outputs.has_migrations }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for migrations
+        id: check-migrations
+        run: |
+          if [ -d "migrations" ] && [ "$(ls -A migrations/*.sql 2>/dev/null)" ]; then
+            echo "has_migrations=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_migrations=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  prepare-migrations:
+    name: Prepare Database Migrations
+    needs: build-and-push
+    if: needs.build-and-push.outputs.has_migrations == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package migrations
+        run: |
+          tar -czf migrations.tar.gz migrations/
+          echo "Migration files to be applied:"
+          ls -la migrations/*.sql
+
+      - name: Upload migrations artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: migrations-${{ github.sha }}
+          path: migrations.tar.gz
+          retention-days: 5
+
+  trigger-deployment:
+    name: Trigger Infrastructure Deployment
+    needs: [build-and-push, prepare-migrations]
+    # Run even if prepare-migrations was skipped (but not if it failed)
+    if: "always() && \nneeds.build-and-push.result == 'success' && \n(needs.prepare-migrations.result == 'success' || needs.prepare-migrations.result == 'skipped')\n"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deployment workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: dlsu-lscs/leap-infra
+          event-type: backend-update
+          client-payload: |
+            {
+              "image": "${{ needs.build-and-push.outputs.image }}",
+              "has_migrations": ${{ needs.build-and-push.outputs.has_migrations }},
+              "branch": "${{ needs.build-and-push.outputs.branch }}",
+              "commit_sha": "${{ needs.build-and-push.outputs.commit_sha }}"
+            }
