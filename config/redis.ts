@@ -33,6 +33,7 @@ export const initRedis = async (): Promise<boolean> => {
         },
         connectTimeout: 10000, // 10 seconds timeout
       },
+      commandsQueueMaxLength: 5000,
     });
 
     redisClient.on('error', (err) => {
