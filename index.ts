@@ -31,7 +31,7 @@ import {
 //   logger: console,
 // });
 
-const events = smee.start();
+// const events = smee.start();
 
 validateEnvironment();
 
