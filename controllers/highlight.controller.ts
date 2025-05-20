@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as HighlightService from '../services/highlight.service';
 import 'dotenv/config';
-import type { UpdateHighlight } from 'models/Highlight';
+import type { UpdateHighlight } from '../models/Highlight';
 
 export async function createHighlight(
   req: Request,
@@ -30,7 +30,7 @@ export async function updateHighlight(
   try {
     const highlight = req.body;
 
-    const updated_highlight: UpdateHighlight =
+    const updated_highlight: UpdateHighlight | null =
       await HighlightService.updateHighlight(
         highlight,
         highlight.contentful_id
