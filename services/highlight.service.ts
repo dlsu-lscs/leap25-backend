@@ -36,7 +36,6 @@ export async function createHighlight(
     ]
   );
 
-
   return {
     id: highlights.insertId,
     event_id,
@@ -131,6 +130,7 @@ export async function getHighlights(): Promise<Highlight[]> {
   const [highlights] = await db.query('SELECT * FROM highlights');
   return highlights as Highlight[];
 }
+
 
 export async function getHighlightById(id: number): Promise<Highlight | null> {
   const db = await getDB();
