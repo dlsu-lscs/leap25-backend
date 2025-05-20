@@ -22,10 +22,11 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
     contentful_id,
     slug,
     gforms_url,
+    schedule_end,
   } = data;
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id, slug, gforms_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id, slug, gforms_url, schedule_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       org_id,
       title,
@@ -40,6 +41,7 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
       contentful_id,
       slug,
       gforms_url,
+      schedule_end,
     ]
   );
 
@@ -59,6 +61,7 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
     contentful_id,
     slug,
     gforms_url,
+    schedule_end,
   };
 
   // initialize Redis cache for this new event
@@ -121,6 +124,7 @@ export async function createEventPayload(
     contentful_id: payload.sys.id,
     slug: fields.slug?.['en-US'],
     gforms_url: fields.gforms_url?.['en-US'],
+    schedule_end: new Date(fields.scheduleEnd?.['en-US']),
   };
 
   return await createEvent(event);
@@ -188,10 +192,11 @@ export async function updateEvent(
     max_slots = existingEvent.max_slots,
     slug = existingEvent.slug,
     gforms_url = existingEvent.gforms_url,
+    schedule_end = existingEvent.schedule_end,
   } = data;
 
   await db.execute(
-    'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ?, slug = ?, gforms_url = ? WHERE id = ?',
+    'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ?, slug = ?, gforms_url = ?, schedule_end = ? WHERE id = ?',
     [
       org_id,
       title,
@@ -205,6 +210,7 @@ export async function updateEvent(
       max_slots,
       slug,
       gforms_url,
+      schedule_end,
       id,
     ]
   );
@@ -275,6 +281,7 @@ export async function updateEventPayload(payload: any): Promise<Event | null> {
     max_slots: max_slots,
     slug: fields.slug?.['en-US'],
     gforms_url: fields.gforms_url?.['en-US'],
+    schedule_end: new Date(fields.scheduleEnd?.['en-US']),
   };
 
   const [events] = (await db.query(
