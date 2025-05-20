@@ -27,13 +27,14 @@ export const initDB = async (): Promise<mysql.Pool> => {
     password: process.env.DB_PASS!,
     database: process.env.DB_DATABASE!,
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined,
-    // Enhanced pool configuration
-    waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 25,
     queueLimit: 0,
     enableKeepAlive: true,
     keepAliveInitialDelay: 10000,
-    multipleStatements: true, // Required for migrations
+    connectTimeout: 15000,
+    waitForConnections: true,
+    namedPlaceholders: true,
+    multipleStatements: true,
   });
 
   // Test connection with retry logic
@@ -70,77 +71,7 @@ export const initDB = async (): Promise<mysql.Pool> => {
     throw lastError;
   }
 
-  // Run migrations
-  await runMigrations(pool);
-
   return pool;
-};
-
-/**
- * Run database migrations
- */
-const runMigrations = async (db: mysql.Pool): Promise<void> => {
-  try {
-    console.log('Running database migrations...');
-    const migrationPath = path.join(process.cwd(), 'migrations', 'init.sql');
-
-    if (!fs.existsSync(migrationPath)) {
-      console.error('Migration file not found at:', migrationPath);
-      return;
-    }
-
-    const sql = fs.readFileSync(migrationPath, 'utf8');
-    const connection = await db.getConnection();
-
-    try {
-      await connection.beginTransaction();
-
-      // Create migrations table if not exists
-      await connection.execute(`
-        CREATE TABLE IF NOT EXISTS migrations (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          name VARCHAR(255) NOT NULL UNIQUE,
-          executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-
-      // Check if migration was already executed
-      const [rows] = await connection.query(
-        'SELECT * FROM migrations WHERE name = ?',
-        ['init.sql']
-      );
-
-      if ((rows as any[]).length === 0) {
-        // Execute the SQL commands (split by semicolon)
-        const commands = sql
-          .split(';')
-          .map((command) => command.trim())
-          .filter((command) => command.length > 0);
-
-        for (const command of commands) {
-          await connection.execute(`${command};`);
-        }
-
-        // Record that migration was executed
-        await connection.execute('INSERT INTO migrations (name) VALUES (?)', [
-          'init.sql',
-        ]);
-        console.log('Database migrations completed successfully');
-      } else {
-        console.log('Migrations already applied, skipping');
-      }
-
-      await connection.commit();
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
-    }
-  } catch (error) {
-    console.error('Error running database migrations:', error);
-    throw error;
-  }
 };
 
 /**
