@@ -13,6 +13,7 @@ export interface Event {
   contentful_id: string;
   slug: string;
   gforms_url: string;
+  schedule_end: Date;
 }
 
 export interface CreateEvent {
@@ -29,6 +30,7 @@ export interface CreateEvent {
   contentful_id: string;
   slug: string;
   gforms_url: string;
+  schedule_end: Date;
 }
 
 export interface UpdateEvent {
@@ -44,4 +46,5 @@ export interface UpdateEvent {
   max_slots?: number;
   slug?: string;
   gforms_url?: string;
+  schedule_end?: Date;
 }
