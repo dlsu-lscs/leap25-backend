@@ -8,12 +8,10 @@ import type {
 } from '../models/EventMedia';
 import { getDB } from '../config/database';
 
-// creates a new event media record
 export async function createEventMedia(data: EventMedia): Promise<EventMedia> {
   const { pub_url, event_id, contentful_id } = data;
   const db = await getDB();
 
-  // inserts into the db
   const [new_event_media] = (await db.execute<mysql.ResultSetHeader>(
     'INSERT INTO event_pubs (pub_url,  event_id, contentful_id) VALUES (?, ?, ?)',
     [pub_url, event_id, contentful_id]
@@ -23,7 +21,6 @@ export async function createEventMedia(data: EventMedia): Promise<EventMedia> {
     throw new Error('Error when making a new event pub.');
   }
 
-  // check if event is successfully created
   const [event_media] = (await db.query(
     'SELECT * FROM event_pubs WHERE contentful_id = ?',
     [contentful_id]
@@ -32,7 +29,6 @@ export async function createEventMedia(data: EventMedia): Promise<EventMedia> {
   return event_media[0] as EventMedia;
 }
 
-// creates an event media based on contentful's payload
 export async function createEventMediaContentful(
   payload: EventMediaPayload
 ): Promise<EventMedia | null> {
@@ -44,7 +40,7 @@ export async function createEventMediaContentful(
       throw new Error('Error in getting payload asset.');
     }
 
-    // storing payload contents into db model variables
+    const pub_type = fields.pubType['en-US'];
     const event_ref = fields.eventRef['en-US'].sys.id;
     const pub_url = await getImageUrlById(pub_asset);
     const contentful_id = payload.sys.id;
@@ -54,9 +50,8 @@ export async function createEventMediaContentful(
     if (!event)
       throw new Error(`Event not found with contentful_id = ${event_ref}`);
 
-    if (!pub_url || !event.id) {
+    if (!pub_url || !event.id)
       throw new Error('Error in getting publication asset.');
-    }
 
     const event_media = {
       pub_url,
@@ -64,7 +59,6 @@ export async function createEventMediaContentful(
       contentful_id,
     };
 
-    // creates new event
     const new_event_media = await createEventMedia(event_media);
 
     return new_event_media;
@@ -74,7 +68,6 @@ export async function createEventMediaContentful(
   }
 }
 
-// updates the event media record in db
 export async function updateEventMedia(
   payload: UpdateEventMedia,
   contentful_id: string
@@ -94,7 +87,6 @@ export async function updateEventMedia(
   return result[0] as EventMedia;
 }
 
-// updates event media based on contentful payload
 export async function updateEventMediaContentful(
   payload: any
 ): Promise<UpdateEventMedia | null> {
@@ -126,7 +118,6 @@ export async function updateEventMediaContentful(
   }
 }
 
-// a handler function that checks if the webhook is updating or creating a new record
 export async function handleContentfulWebhook(payload: any): Promise<{
   eventMedia: EventMedia | UpdateEventMedia | null;
   is_created: boolean;
@@ -134,7 +125,6 @@ export async function handleContentfulWebhook(payload: any): Promise<{
   const contentful_id = payload.sys.id;
   const db = await getDB();
 
-  // search for the event media record in db
   const [rows] = (await db.execute(
     'SELECT contentful_id FROM event_pubs WHERE contentful_id = ?',
     [contentful_id]
@@ -142,7 +132,6 @@ export async function handleContentfulWebhook(payload: any): Promise<{
 
   const is_exists: boolean = rows.length > 0;
 
-  // if event media exists, then update, otherwise create
   const eventMedia = is_exists
     ? await updateEventMediaContentful(payload)
     : await createEventMediaContentful(payload);
@@ -150,7 +139,6 @@ export async function handleContentfulWebhook(payload: any): Promise<{
   return { eventMedia, is_created: !is_exists };
 }
 
-// deletes an event media from db
 export async function deleteEventMedia(
   contentful_id: string
 ): Promise<boolean> {
