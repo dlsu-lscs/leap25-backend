@@ -355,7 +355,7 @@ export async function getEventBySearch(
   next: NextFunction
 ): Promise<void> {
   try {
-    const search = req.body;
+    const search = req.query.q as string;
 
     if (!search || typeof search !== 'string') {
       res
@@ -371,9 +371,7 @@ export async function getEventBySearch(
       return;
     }
 
-    const events: Event[] | null = (await EventService.getEventBySearch(
-      search
-    )) as Event[] | null;
+    const events = await EventService.getEventBySearch(search);
 
     if (!events) {
       res.status(404).json({ message: `No events found with name: ${search}` });
@@ -381,6 +379,7 @@ export async function getEventBySearch(
 
     res.status(200).json(events);
   } catch (error) {
+    console.error('Search error:', error);
     next(error);
   }
 }
