@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import passport from 'passport';
 import { urlencoded, json } from 'express';
 import 'dotenv/config';
 
@@ -17,6 +16,7 @@ import subthemeRouter from './routes/subtheme.routes';
 import mediaRouter from './routes/media.routes';
 import registrationRouter from './routes/registration.routes';
 import healthRouter from './routes/health.routes';
+import bookmarkRouter from './routes/bookmark.routes';
 
 import {
   initializeEventCache,
@@ -75,6 +75,7 @@ const startServer = async (): Promise<void> => {
     app.use('/registrations', registrationRouter);
     app.use('/media', mediaRouter);
     app.use('/health', healthRouter);
+    app.use('/bookmarks', bookmarkRouter);
 
     app.get('/', (_, res) => {
       res.status(200).json({

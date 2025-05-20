@@ -259,9 +259,6 @@ export async function deleteEventContentful(
   res: Response
 ): Promise<void> {
   try {
-    console.log('✅ deleteEventContentful hit');
-    console.log('Headers:', req.headers);
-    console.log('Body:', req.body);
     const secret = req.headers['contentful-webhook-secret'];
 
     if (secret !== process.env.CONTENTFUL_WEBHOOK_SECRET) {
@@ -275,10 +272,6 @@ export async function deleteEventContentful(
       payload?.sys?.type === 'DeletedEntry' &&
       payload?.sys?.environment?.sys?.id === 'master' &&
       payload?.sys?.contentType?.sys?.id === 'events';
-
-    console.log('Payload type:', payload?.sys?.type);
-    console.log('Environment ID:', payload?.sys?.environment?.sys?.id);
-    console.log('ContentType ID:', payload?.sys?.contentType?.sys?.id);
 
     if (!is_valid) {
       res.status(400).json({ error: 'Invalid payload or content type.' });
