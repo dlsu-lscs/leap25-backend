@@ -311,7 +311,7 @@ describe('EventService Unit Tests', () => {
       { id: 2, title: 'event, mock', org_id: 2 },
     ];
 
-    mockDb.query.mockResolvedValueOnce(mock_events);
+    mockDb.query.mockResolvedValueOnce([mock_events]);
 
     const result = await EventService.getEventBySearch(search);
 
@@ -319,13 +319,6 @@ describe('EventService Unit Tests', () => {
       'SELECT * FROM events WHERE title LIKE ?',
       [`%${search}%`]
     );
-    expect(result).toEqual([
-      {
-        id: 1,
-        title: 'mock event',
-        org_id: 1,
-      },
-      { id: 2, title: 'event, mock', org_id: 2 },
-    ]);
+    expect(result).toEqual(mock_events);
   });
 });

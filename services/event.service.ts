@@ -490,15 +490,20 @@ export async function getEventBySearch(
   search: string
 ): Promise<Event[] | null> {
   const db = await getDB();
-  const pattern = `%${search}%`;
+  try {
+    const pattern = `%${search}%`;
 
-  const events = await db.query('SELECT * FROM events WHERE title LIKE ?', [
-    pattern,
-  ]);
+    const [events] = await db.query('SELECT * FROM events WHERE title LIKE ?', [
+      pattern,
+    ]);
 
-  if ((events as any[]).length === 0) {
-    return null;
+    if (!Array.isArray(events) || events.length === 0) {
+      return null;
+    }
+
+    return events as Event[];
+  } catch (error) {
+    console.error('Database search error:', error);
+    throw new Error(`Search operation failed: ${(error as Error).message}`);
   }
-
-  return events as any[];
 }

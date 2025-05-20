@@ -355,18 +355,30 @@ export async function getEventBySearch(
   next: NextFunction
 ): Promise<void> {
   try {
-    const search = req.body;
+    const search = req.query.q as string;
 
-    const events: Event[] | null = (await EventService.getEventBySearch(
-      search
-    )) as Event[] | null;
+    if (!search || typeof search !== 'string') {
+      res
+        .status(400)
+        .json({ message: 'Search query parameter "q" is required' });
+      return;
+    }
 
+    if (search.length > 100) {
+      res
+        .status(400)
+        .json({ message: 'Search query too long (max 100 characters)' });
+      return;
+    }
+
+    const events = await EventService.getEventBySearch(search);
     if (!events) {
       res.status(404).json({ message: `No events found with name: ${search}` });
     }
 
     res.status(200).json(events);
   } catch (error) {
+    console.error('Search error:', error);
     next(error);
   }
 }
