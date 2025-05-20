@@ -357,6 +357,20 @@ export async function getEventBySearch(
   try {
     const search = req.body;
 
+    if (!search || typeof search !== 'string') {
+      res
+        .status(400)
+        .json({ message: 'Search query parameter "q" is required' });
+      return;
+    }
+
+    if (search.length > 100) {
+      res
+        .status(400)
+        .json({ message: 'Search query too long (max 100 characters)' });
+      return;
+    }
+
     const events: Event[] | null = (await EventService.getEventBySearch(
       search
     )) as Event[] | null;
