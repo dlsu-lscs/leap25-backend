@@ -131,7 +131,6 @@ export async function getHighlights(): Promise<Highlight[]> {
   return highlights as Highlight[];
 }
 
-
 export async function getHighlightById(id: number): Promise<Highlight | null> {
   const db = await getDB();
 
@@ -225,7 +224,7 @@ export function validatePayload({
   }
 
   const is_valid =
-    payload?.sys?.type === 'DeletedEntry' &&
+    (payload?.sys?.type === 'Entry' || payload?.sys?.type === 'DeletedEntry') &&
     payload?.sys?.environment?.sys?.id === 'master' &&
     payload?.sys?.contentType?.sys?.id === 'highlightEvents';
 

@@ -17,6 +17,7 @@ import subthemeRouter from './routes/subtheme.routes';
 import mediaRouter from './routes/media.routes';
 import registrationRouter from './routes/registration.routes';
 import healthRouter from './routes/health.routes';
+import highlightRouter from './routes/highlight.routes';
 import bookmarkRouter from './routes/bookmark.routes';
 
 import {
@@ -91,6 +92,7 @@ const startServer = async (): Promise<void> => {
     app.use('/users', userRouter);
     app.use('/events', eventRouter);
     app.use('/orgs', orgRouter);
+    app.use('/highlights', highlightRouter);
     app.use('/subthemes', subthemeRouter);
     app.use('/registrations', registrationRouter);
     app.use('/media', mediaRouter);

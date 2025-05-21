@@ -115,9 +115,10 @@ export async function handleHighlightContentfulWebhook(
 ): Promise<void> {
   try {
     const payload = req.body;
+
     const is_valid = HighlightService.validatePayload({
       payload,
-      secret: req.headers['x-webhook-secret'] as string,
+      secret: req.headers['contentful-webhook-secret'] as string,
     });
 
     if (!is_valid) {
