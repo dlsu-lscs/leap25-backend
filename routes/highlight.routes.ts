@@ -27,3 +27,5 @@ router.delete(
 // catch all routes
 router.post('/', highlightController.createHighlight);
 router.get('/', highlightController.getAllHighlights);
+
+export default router;
