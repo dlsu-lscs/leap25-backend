@@ -186,7 +186,7 @@ describe('EventService Unit Tests', () => {
 
   it('should get event by slug', async () => {
     const mockEvent = { slug: 'test-event', title: 'test Event' };
-    mockDb.query.mockResolvedValueOnce([mockEvent]);
+    mockDb.query.mockResolvedValueOnce([[mockEvent]]);
 
     const result = await EventService.getEventBySlug('test-event');
 
