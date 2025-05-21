@@ -18,14 +18,12 @@ export const initDB = async (): Promise<mysql.Pool> => {
 
   console.log('Initializing database connection...');
 
-  // Create connection pool with optimized settings
   pool = mysql.createPool({
     host: process.env.DB_HOST!,
     user: process.env.DB_USER!,
     password: process.env.DB_PASS!,
     database: process.env.DB_DATABASE!,
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined,
-    connectionLimit: 25,
     queueLimit: 0,
     enableKeepAlive: true,
     keepAliveInitialDelay: 10000,
@@ -35,7 +33,6 @@ export const initDB = async (): Promise<mysql.Pool> => {
     multipleStatements: true,
   });
 
-  // Test connection with retry logic
   let connected = false;
   let retries = 5;
   let lastError: Error | null = null;
@@ -51,7 +48,7 @@ export const initDB = async (): Promise<mysql.Pool> => {
       retries--;
 
       if (retries > 0) {
-        // Calculate delay with exponential backoff
+        // calculate delay with exponential backoff
         const delay = Math.pow(2, 5 - retries) * 1000;
         console.log(
           `Failed to connect to database. Retrying in ${delay / 1000}s... (${retries} attempts left)`
