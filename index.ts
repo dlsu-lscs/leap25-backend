@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { urlencoded, json } from 'express';
+import rateLimit from 'express-rate-limit';
 import 'dotenv/config';
 
 import { validateEnvironment } from './config/env';
@@ -51,11 +52,30 @@ const startServer = async (): Promise<void> => {
     app.use(json());
     app.use(urlencoded({ extended: true }));
     app.use(
+      rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limit each IP to 100 requests per windowMs
+        standardHeaders: true,
+        legacyHeaders: false,
+      })
+    );
+    app.use(
       cors({
         origin: process.env.CORS_ORIGIN || '*',
         credentials: true,
       })
     );
+    // skip caching for dynamic routes or authenticated requests
+    app.use((req, res, next) => {
+      const skipCache = req.method !== 'GET' || req.path.includes('/auth/');
+      if (skipCache) {
+        res.setHeader('Cache-Control', 'no-store');
+      } else {
+        // 5 min cache for static data
+        res.setHeader('Cache-Control', 'public, max-age=300');
+      }
+      next();
+    });
 
     // configure session
     await configureSession(app);

@@ -354,31 +354,35 @@ export async function getEventAvailableSlots(
 ): Promise<{ available: number; total: number } | null> {
   try {
     const cachedSlots = await redisEventOps.getEventSlots(eventId);
+    if (cachedSlots) {
+      return cachedSlots;
+    }
 
     // Get event values from db for checking
     const event = await getEventById(eventId);
     if (!event) return null;
 
+    // TODO: make reconciliation be in background jobs rather than real-time sync to prevent database hit on every request
     // Try to get from Redis first for better performance (cache hit)
-    if (cachedSlots) {
-      const dbAvailable = event.max_slots - event.registered_slots;
-
-      // If there's an inconsistency, update Redis with correct DB values
-      if (
-        cachedSlots.available !== dbAvailable ||
-        cachedSlots.total !== event.max_slots
-      ) {
-        const result = {
-          available: dbAvailable,
-          total: event.max_slots,
-        };
-
-        await redisEventOps.setEventSlots(eventId, result, 300);
-        return result;
-      }
-
-      return cachedSlots;
-    }
+    // if (cachedSlots) {
+    //   const dbAvailable = event.max_slots - event.registered_slots;
+    //
+    //   // If there's an inconsistency, update Redis with correct DB values
+    //   if (
+    //     cachedSlots.available !== dbAvailable ||
+    //     cachedSlots.total !== event.max_slots
+    //   ) {
+    //     const result = {
+    //       available: dbAvailable,
+    //       total: event.max_slots,
+    //     };
+    //
+    //     await redisEventOps.setEventSlots(eventId, result, 300);
+    //     return result;
+    //   }
+    //
+    //   return cachedSlots;
+    // }
 
     // If not in Redis, get from database (cache miss)
     const result = {
@@ -409,44 +413,44 @@ export async function getEventAvailableSlots(
 }
 
 // Additional functions
-export async function initializeRedisEventCache(): Promise<void> {
-  try {
-    if (!isRedisReady()) {
-      console.log('Redis not connected, skipping event cache initialization');
-      return;
-    }
-    console.log('Initializing Redis event cache...');
-    const events = await getAllEvents();
-    await redisEventOps.initializeEventSlots(events);
-  } catch (error) {
-    console.error('Failed to initialize Redis event cache:', error);
-  }
-}
-
-export async function verifyAllEventSlotsConsistency(): Promise<void> {
-  if (!isRedisReady()) {
-    return;
-  }
-
-  try {
-    const events = await getAllEvents();
-    let fixed = 0;
-
-    for (const event of events) {
-      const isConsistent = await redisEventOps.verifyEventSlotsConsistency(
-        event.id,
-        event
-      );
-      if (!isConsistent) fixed++;
-    }
-
-    if (fixed > 0) {
-      console.log(`Fixed ${fixed} inconsistent event slot records in Redis`);
-    }
-  } catch (error) {
-    console.error('Error during event slots consistency check:', error);
-  }
-}
+// export async function initializeRedisEventCache(): Promise<void> {
+//   try {
+//     if (!isRedisReady()) {
+//       console.log('Redis not connected, skipping event cache initialization');
+//       return;
+//     }
+//     console.log('Initializing Redis event cache...');
+//     const events = await getAllEvents();
+//     await redisEventOps.initializeEventSlots(events);
+//   } catch (error) {
+//     console.error('Failed to initialize Redis event cache:', error);
+//   }
+// }
+//
+// export async function verifyAllEventSlotsConsistency(): Promise<void> {
+//   if (!isRedisReady()) {
+//     return;
+//   }
+//
+//   try {
+//     const events = await getAllEvents();
+//     let fixed = 0;
+//
+//     for (const event of events) {
+//       const isConsistent = await redisEventOps.verifyEventSlotsConsistency(
+//         event.id,
+//         event
+//       );
+//       if (!isConsistent) fixed++;
+//     }
+//
+//     if (fixed > 0) {
+//       console.log(`Fixed ${fixed} inconsistent event slot records in Redis`);
+//     }
+//   } catch (error) {
+//     console.error('Error during event slots consistency check:', error);
+//   }
+// }
 
 export async function getEventByCode(code: string): Promise<Event | null> {
   const db = await getDB();
