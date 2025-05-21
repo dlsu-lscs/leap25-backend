@@ -450,7 +450,9 @@ export async function verifyAllEventSlotsConsistency(): Promise<void> {
 
 export async function getEventByCode(code: string): Promise<Event | null> {
   const db = await getDB();
-  const events = await db.query('SELECT * FROM events WHERE code = ?', [code]);
+  const [events] = await db.query('SELECT * FROM events WHERE code = ?', [
+    code,
+  ]);
 
   if ((events as any[]).length === 0) {
     return null;
@@ -484,13 +486,17 @@ export async function getEventsByDay(day: number): Promise<Event[] | null> {
 export async function getEventBySlug(slug: string): Promise<Event | null> {
   const db = await getDB();
 
-  const events = await db.query('SELECT * FROM events WHERE slug = ?', [slug]);
+  const [events] = await db.query('SELECT * FROM events WHERE slug = ?', [
+    slug,
+  ]);
 
   if ((events as any[]).length === 0) {
     return null;
   }
 
-  return (events as any[])[0] as Event;
+  const event = (events as any[])[0];
+
+  return event;
 }
 
 export async function getEventBySearch(
