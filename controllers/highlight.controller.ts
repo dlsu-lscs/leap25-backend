@@ -150,7 +150,7 @@ export async function deleteHighlightContentful(
     const payload = req.body;
     const is_valid = HighlightService.validatePayload({
       payload,
-      secret: req.headers['x-webhook-secret'] as string,
+      secret: req.headers['contentful-webhook-secret'] as string,
     });
 
     if (!is_valid) {
@@ -161,7 +161,7 @@ export async function deleteHighlightContentful(
     const deleted_highlight =
       await HighlightService.deleteHighlightContentful(payload);
 
-    if (deleted_highlight) {
+    if (!deleted_highlight) {
       res.status(500).json({
         error: `Failed to delete highlight with contentful id: ${payload.sys.id}`,
       });
