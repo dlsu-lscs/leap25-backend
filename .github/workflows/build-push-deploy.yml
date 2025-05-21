@@ -88,23 +88,23 @@ jobs:
           path: migrations.tar.gz
           retention-days: 5
 
-  trigger-deployment:
-    name: Trigger Infrastructure Deployment
-    needs: [build-and-push, prepare-migrations]
-    # Run even if prepare-migrations was skipped (but not if it failed)
-    if: "always() && \nneeds.build-and-push.result == 'success' && \n(needs.prepare-migrations.result == 'success' || needs.prepare-migrations.result == 'skipped')\n"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger deployment workflow
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          repository: dlsu-lscs/leap-infra
-          event-type: backend-update
-          client-payload: |
-            {
-              "image": "${{ needs.build-and-push.outputs.image }}",
-              "has_migrations": ${{ needs.build-and-push.outputs.has_migrations }},
-              "branch": "${{ needs.build-and-push.outputs.branch }}",
-              "commit_sha": "${{ needs.build-and-push.outputs.commit_sha }}"
-            }
+  # trigger-deployment:
+  #   name: Trigger Infrastructure Deployment
+  #   needs: [build-and-push, prepare-migrations]
+  #   # Run even if prepare-migrations was skipped (but not if it failed)
+  #   if: "always() && \nneeds.build-and-push.result == 'success' && \n(needs.prepare-migrations.result == 'success' || needs.prepare-migrations.result == 'skipped')\n"
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Trigger deployment workflow
+  #       uses: peter-evans/repository-dispatch@v2
+  #       with:
+  #         token: ${{ secrets.REPO_ACCESS_TOKEN }}
+  #         repository: dlsu-lscs/leap-infra
+  #         event-type: backend-update
+  #         client-payload: |
+  #           {
+  #             "image": "${{ needs.build-and-push.outputs.image }}",
+  #             "has_migrations": ${{ needs.build-and-push.outputs.has_migrations }},
+  #             "branch": "${{ needs.build-and-push.outputs.branch }}",
+  #             "commit_sha": "${{ needs.build-and-push.outputs.commit_sha }}"
+  #           }
