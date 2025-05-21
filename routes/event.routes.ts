@@ -8,7 +8,7 @@ router.post('/contentful', eventController.handleEventContentfulWebhook);
 router.post('/contentful/delete', eventController.deleteEventContentful);
 
 // slug based routes
-router.get('/slug/:id', eventController.getEventBySlug);
+router.get('/slug/:slug', eventController.getEventBySlug);
 
 // get routes with suffixes (ft. subtheme)
 router.post('/subtheme', eventController.getEventBySubtheme);

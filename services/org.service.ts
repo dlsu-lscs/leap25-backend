@@ -5,12 +5,12 @@ import type { Org, CreateOrg, UpdateOrg } from '../models/Org';
 import { getImageUrlById } from './contentful.service';
 
 export async function createOrg(data: CreateOrg): Promise<Org> {
-  const { name, org_logo, contentful_id } = data;
+  const { name, org_logo, contentful_id, org_url } = data;
   const db = await getDB();
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO orgs (name, org_logo, contentful_id) VALUES (?, ?, ?)',
-    [name, org_logo, contentful_id]
+    'INSERT INTO orgs (name, org_logo, contentful_id, org_url) VALUES (?, ?, ?, ?)',
+    [name, org_logo, contentful_id, org_url]
   );
 
   const insertId = result.insertId;
@@ -20,6 +20,7 @@ export async function createOrg(data: CreateOrg): Promise<Org> {
     name,
     org_logo,
     contentful_id,
+    org_url,
   };
 }
 
@@ -29,6 +30,7 @@ export async function createOrgPayload(payload: any): Promise<Org | null> {
   const org_logo_id = fields.org_logo?.['en-US']?.sys?.id;
   const org_logo = org_logo_id ? await getImageUrlById(org_logo_id) : null;
   const name = fields.org_name?.['en-US'];
+  const org_url = fields.orgUrl?.['en-US'];
 
   if (!name || !org_logo) {
     return null;
@@ -37,6 +39,7 @@ export async function createOrgPayload(payload: any): Promise<Org | null> {
   const org = {
     name,
     org_logo,
+    org_url,
     contentful_id: payload.sys.id,
   };
 
@@ -62,14 +65,16 @@ export async function updateOrg(
   const existingOrg = await getOrgById(id);
   if (!existingOrg[0]) return null;
 
-  const { name = existingOrg[0].name, org_logo = existingOrg[0].org_logo } =
-    data;
+  const {
+    name = existingOrg[0].name,
+    org_logo = existingOrg[0].org_logo,
+    org_url = existingOrg[0].org_url,
+  } = data;
   const db = await getDB();
-  await db.execute('UPDATE orgs SET name = ?, org_logo = ? WHERE id = ?', [
-    name,
-    org_logo,
-    id,
-  ]);
+  await db.execute(
+    'UPDATE orgs SET name = ?, org_logo = ?, org_url = ? WHERE id = ?',
+    [name, org_logo, org_url, id]
+  );
 
   const updated_org = await getOrgById(id);
 
@@ -88,6 +93,7 @@ export async function updateOrgPayload(
   const org_logo_id = fields.org_logo?.['en-US']?.sys?.id;
   const org_logo = org_logo_id ? await getImageUrlById(org_logo_id) : null;
   const name = fields.org_name?.['en-US'];
+  const org_url = fields.orgUrl?.['en-US'];
   const contentful_id = payload.sys.id;
 
   if (!contentful_id) return null;
@@ -98,6 +104,7 @@ export async function updateOrgPayload(
   const updated_org: UpdateOrg = {
     name: name || existing_org.name,
     org_logo: org_logo || existing_org.org_logo,
+    org_url: org_url || existing_org.org_url,
   };
 
   const orgs = await getOrgByContentfulId(contentful_id);
