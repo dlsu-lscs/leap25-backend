@@ -3,7 +3,7 @@ name: Deploy Staging
 
 on:
   workflow_run:
-    workflows: ["Continuous Delivery"]
+    workflows: ["Build, Push, and Deploy"]
     types:
       - completed
     branches:
