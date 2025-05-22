@@ -63,7 +63,7 @@ export async function deleteBookmark(
       event_id
     );
 
-    if (delete_bookmark) {
+    if (!delete_bookmark) {
       res.status(500).json({
         error: `Failed to delete event ${event_id} bookmark of user ${user_id}`,
       });
