@@ -369,9 +369,6 @@ export async function getEventBySearch(
     }
 
     const events = await EventService.getEventBySearch(search);
-    if (!events) {
-      res.status(404).json({ message: `No events found with name: ${search}` });
-    }
 
     res.status(200).json(events);
   } catch (error) {
