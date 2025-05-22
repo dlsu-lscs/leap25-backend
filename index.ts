@@ -54,8 +54,8 @@ const startServer = async (): Promise<void> => {
     app.use(urlencoded({ extended: true }));
     app.use(
       rateLimit({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 100, // limit each IP to 100 requests per windowMs
+        windowMs: 5 * 60 * 1000, // 5 minutes
+        max: 1000, // limit each IP to 1000 requests per windowMs
         standardHeaders: true,
         legacyHeaders: false,
       })
