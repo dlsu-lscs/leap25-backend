@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { urlencoded, json } from 'express';
-import rateLimit from 'express-rate-limit';
 import 'dotenv/config';
 
 import { validateEnvironment } from './config/env';
@@ -52,14 +51,6 @@ const startServer = async (): Promise<void> => {
 
     app.use(json());
     app.use(urlencoded({ extended: true }));
-    app.use(
-      rateLimit({
-        windowMs: 1 * 60 * 1000, // 1 minutes
-        max: 800, // limit each IP to 800 requests per windowMs (1 min)
-        standardHeaders: true,
-        legacyHeaders: false,
-      })
-    );
     app.use(
       cors({
         origin: process.env.CORS_ORIGIN || '*',
