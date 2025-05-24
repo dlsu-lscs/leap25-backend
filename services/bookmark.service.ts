@@ -45,7 +45,7 @@ export async function getAllUserBookmarks(
 export async function deleteBookmark(
   user_id: number,
   event_id: number
-): Promise<number | null> {
+): Promise<boolean> {
   const db = await getDB();
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
@@ -53,10 +53,5 @@ export async function deleteBookmark(
     [user_id, event_id]
   );
 
-  if (result.affectedRows === 0) {
-    console.error(`Bookmark not found or could not be deleted`);
-    return user_id;
-  }
-
-  return null;
+  return result.affectedRows > 0;
 }

@@ -81,14 +81,14 @@ describe('BookmarkService Unit Tests', () => {
       [user_id, event_id]
     );
 
-    expect(result).toBeNull();
+    expect(result).toBe(true);
   });
 
-  it('should return user_id if delete fails', async () => {
+  it('should return false if delete fails', async () => {
     mockDb.execute.mockResolvedValueOnce([{ affectedRows: 0 }]);
 
     const result = await BookmarkService.deleteBookmark(1, 2);
 
-    expect(result).toBe(1);
+    expect(result).toBe(false);
   });
 });
