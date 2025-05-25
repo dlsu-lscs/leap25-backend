@@ -3,7 +3,7 @@ import { getDB } from '../config/database';
 import type { Event, CreateEvent, UpdateEvent } from '../models/Event';
 import type { EventMedia } from '../models/EventMedia';
 import { getOrg } from './contentful.service';
-import { redisEventOps, isRedisReady } from '../config/redis';
+import { redisEventOps } from '../config/redis';
 
 export async function createEvent(data: CreateEvent): Promise<Event> {
   const db = await getDB();
@@ -175,66 +175,105 @@ export async function updateEvent(
   data: UpdateEvent
 ): Promise<Event | null> {
   const db = await getDB();
+  const connection = await db.getConnection();
 
-  const existingEvent = await getEventById(id);
-  if (!existingEvent) return null;
+  try {
+    await connection.beginTransaction();
 
-  const {
-    org_id = existingEvent.org_id,
-    title = existingEvent.title,
-    description = existingEvent.description,
-    subtheme_id = existingEvent.subtheme_id,
-    venue = existingEvent.venue,
-    schedule = existingEvent.schedule,
-    fee = existingEvent.fee,
-    code = existingEvent.code,
-    registered_slots = existingEvent.registered_slots,
-    max_slots = existingEvent.max_slots,
-    slug = existingEvent.slug,
-    gforms_url = existingEvent.gforms_url,
-    schedule_end = existingEvent.schedule_end,
-  } = data;
+    const [existingRows] = await connection.query(
+      'SELECT * FROM events WHERE id = ? FOR UPDATE',
+      [id]
+    );
 
-  await db.execute(
-    'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ?, slug = ?, gforms_url = ?, schedule_end = ? WHERE id = ?',
-    [
-      org_id,
-      title,
-      description,
-      subtheme_id,
-      venue,
-      schedule,
-      fee,
-      code,
-      registered_slots,
-      max_slots,
-      slug,
-      gforms_url,
-      schedule_end,
-      id,
-    ]
-  );
-
-  const updatedEvent = await getEventById(id);
-
-  // if max_slots or registered_slots changed, update Redis
-  if (
-    updatedEvent &&
-    (data.max_slots !== undefined || data.registered_slots !== undefined)
-  ) {
-    try {
-      await redisEventOps.syncEventSlots(id, updatedEvent);
-    } catch (error) {
-      console.error(
-        `Failed to update event ${id} in Redis after DB update:`,
-        error
-      );
-      // invalidate cache to force refresh from DB
-      await redisEventOps.invalidateEventSlots(id);
+    const existingEvents = existingRows as Event[];
+    if (existingEvents.length === 0) {
+      await connection.rollback();
+      return null;
     }
-  }
 
-  return updatedEvent;
+    const existingEvent = existingEvents[0]!;
+
+    const {
+      org_id = existingEvent.org_id,
+      title = existingEvent.title,
+      description = existingEvent.description,
+      subtheme_id = existingEvent.subtheme_id,
+      venue = existingEvent.venue,
+      schedule = existingEvent.schedule,
+      fee = existingEvent.fee,
+      code = existingEvent.code,
+      registered_slots = existingEvent.registered_slots,
+      max_slots = existingEvent.max_slots,
+      slug = existingEvent.slug,
+      gforms_url = existingEvent.gforms_url,
+      schedule_end = existingEvent.schedule_end,
+    } = data;
+
+    await connection.execute(
+      'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ?, slug = ?, gforms_url = ?, schedule_end = ? WHERE id = ?',
+      [
+        org_id,
+        title,
+        description,
+        subtheme_id,
+        venue,
+        schedule,
+        fee,
+        code,
+        registered_slots,
+        max_slots,
+        slug,
+        gforms_url,
+        schedule_end,
+        id,
+      ]
+    );
+
+    const [updatedRows] = await connection.query(
+      'SELECT * FROM events WHERE id = ?',
+      [id]
+    );
+
+    const updatedEvents = updatedRows as Event[];
+    if (updatedEvents.length === 0) {
+      await connection.rollback();
+      return null;
+    }
+
+    const updatedEvent = updatedEvents[0]!;
+
+    await connection.commit();
+
+    // update redis cache if slots data changed
+    if (data.max_slots !== undefined || data.registered_slots !== undefined) {
+      try {
+        await redisEventOps.syncEventSlots(id, updatedEvent);
+      } catch (redisError) {
+        console.error(
+          `Failed to update event ${id} in Redis after DB update:`,
+          redisError
+        );
+        // invalidate the cache as a fallback
+        try {
+          await redisEventOps.invalidateEventSlots(id);
+          console.log(`Invalidated cache for event ${id} due to sync failure`);
+        } catch (invalidateError) {
+          console.error(
+            `Critical: Failed to invalidate Redis cache for event ${id}:`,
+            invalidateError
+          );
+        }
+      }
+    }
+
+    return updatedEvent;
+  } catch (error) {
+    await connection.rollback();
+    console.error(`Error updating event ${id}:`, error);
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 export async function updateEventPayload(payload: any): Promise<Event | null> {

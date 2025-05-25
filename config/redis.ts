@@ -8,6 +8,12 @@ let redisClient: RedisClientType | null = null;
 // Redis connection status
 let redisIsReady = false;
 
+export type ConsistencyCheckResult = {
+  status: 'consistent' | 'inconsistent' | 'unavailable' | 'error';
+  message?: string;
+  fixed?: boolean;
+};
+
 /**
  * Initialize Redis client
  */
@@ -162,35 +168,136 @@ export const redisEventOps = {
   verifyEventSlotsConsistency: async (
     eventId: number,
     event: Event
-  ): Promise<boolean> => {
-    try {
-      if (!isRedisReady()) return false;
-
-      const client = getRedisClient()!;
-      const cachedData = await client.get(REDIS_KEYS.eventSlots(eventId));
-      if (!cachedData) return false;
-
-      const redisSlots = JSON.parse(cachedData);
-      const dbAvailable = event.max_slots - event.registered_slots;
-
-      // sync with DB values
-      if (
-        redisSlots.available !== dbAvailable ||
-        redisSlots.total !== event.max_slots
-      ) {
-        console.log(
-          `Fixing inconsistency for event ${eventId}: Redis (${redisSlots.available}/${redisSlots.total}) vs DB (${dbAvailable}/${event.max_slots})`
-        );
-
-        await redisEventOps.syncEventSlots(eventId, event);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error(`Error verifying consistency for event ${eventId}:`, error);
-      return false;
+  ): Promise<ConsistencyCheckResult> => {
+    if (!isRedisReady()) {
+      return { status: 'unavailable', message: 'Redis not available' };
     }
+
+    const client = getRedisClient()!;
+    let retries = 2;
+
+    while (retries >= 0) {
+      try {
+        const cachedData = await client.get(REDIS_KEYS.eventSlots(eventId));
+
+        // create cache key if it doesn't exist
+        if (!cachedData) {
+          const available = event.max_slots - event.registered_slots;
+          const data = {
+            available,
+            total: event.max_slots,
+          };
+
+          await client.setEx(
+            REDIS_KEYS.eventSlots(eventId),
+            300, // 5 minutes TTL
+            JSON.stringify(data)
+          );
+
+          return {
+            status: 'inconsistent',
+            message: `Cache created for event ${eventId}`,
+            fixed: true,
+          };
+        }
+
+        // parse the cached data then check for inconsistencies
+        const redisSlots = JSON.parse(cachedData);
+        const dbAvailable = event.max_slots - event.registered_slots;
+
+        // check if data is consistent
+        if (
+          redisSlots.available !== dbAvailable ||
+          redisSlots.total !== event.max_slots
+        ) {
+          console.log(
+            `Fixing inconsistency for event ${eventId}: Redis (${redisSlots.available}/${redisSlots.total}) vs DB (${dbAvailable}/${event.max_slots})`
+          );
+
+          // fix the inconsistency with retries
+          let syncRetries = 2;
+          let syncSuccess = false;
+
+          while (syncRetries >= 0 && !syncSuccess) {
+            try {
+              await redisEventOps.syncEventSlots(eventId, event);
+              syncSuccess = true;
+            } catch (syncError) {
+              syncRetries--;
+              if (syncRetries < 0) {
+                // if all sync attempts failed, invalidate the cache as last resort
+                try {
+                  await redisEventOps.invalidateEventSlots(eventId);
+                  return {
+                    status: 'error',
+                    message: `Failed to fix inconsistency for event ${eventId}, cache invalidated`,
+                    fixed: false,
+                  };
+                } catch (invalidateError) {
+                  console.error(
+                    `Failed to invalidate cache for event ${eventId}:`,
+                    invalidateError
+                  );
+                  return {
+                    status: 'error',
+                    message: `Critical failure: could not fix or invalidate cache for event ${eventId}`,
+                    fixed: false,
+                  };
+                }
+              } else {
+                // wait before retrying
+                await new Promise((resolve) =>
+                  setTimeout(resolve, 50 * (2 - syncRetries))
+                );
+              }
+            }
+          }
+
+          return {
+            status: 'inconsistent',
+            message: `Fixed inconsistency for event ${eventId}`,
+            fixed: true,
+          };
+        }
+
+        // data is consistent
+        return { status: 'consistent' };
+      } catch (error) {
+        retries--;
+        if (retries < 0) {
+          console.error(
+            `Error verifying consistency for event ${eventId}:`,
+            error
+          );
+
+          // invalidate cache on error
+          try {
+            await redisEventOps.invalidateEventSlots(eventId);
+            return {
+              status: 'error',
+              message: `Error checking consistency for event ${eventId}, cache invalidated: ${(error as Error).message}`,
+              fixed: false,
+            };
+          } catch (invalidateError) {
+            return {
+              status: 'error',
+              message: `Critical error for event ${eventId}: ${(error as Error).message}`,
+              fixed: false,
+            };
+          }
+        } else {
+          // wait before retrying
+          await new Promise((resolve) =>
+            setTimeout(resolve, 50 * (2 - retries))
+          );
+        }
+      }
+    }
+
+    return {
+      status: 'error',
+      message: 'Unknown error during consistency check',
+    };
   },
 
   // get available slots with fallback to database
