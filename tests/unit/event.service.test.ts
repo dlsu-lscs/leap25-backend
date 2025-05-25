@@ -3,11 +3,19 @@ import * as EventService from '../../services/event.service';
 import { getDB } from '../../config/database';
 import { redisEventOps } from '../../config/redis';
 
-// Mock the database
+// Mock the database with getConnection function
 vi.mock('../../config/database', () => ({
   getDB: vi.fn().mockResolvedValue({
     execute: vi.fn(),
     query: vi.fn(),
+    getConnection: vi.fn().mockResolvedValue({
+      beginTransaction: vi.fn(),
+      commit: vi.fn(),
+      rollback: vi.fn(),
+      release: vi.fn(),
+      query: vi.fn(),
+      execute: vi.fn(),
+    }),
   }),
 }));
 
@@ -73,10 +81,12 @@ vi.mock('../../services/contentful.service', () => {
 
 describe('EventService Unit Tests', () => {
   let mockDb: any;
+  let mockConnection: any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     mockDb = await getDB();
+    mockConnection = await mockDb.getConnection();
   });
 
   it('should create a new event', async () => {
@@ -226,18 +236,18 @@ describe('EventService Unit Tests', () => {
 
     const updatedEvent = { ...existingEvent, ...updateData };
 
-    // Mock getEventById call in updateEvent
-    mockDb.query.mockResolvedValueOnce([[existingEvent]]);
-    // Mock the update execute call
-    mockDb.execute.mockResolvedValueOnce([{}]);
-    // Mock the second getEventById call
-    mockDb.query.mockResolvedValueOnce([[updatedEvent]]);
+    // Mock the connection query for getting existing event
+    mockConnection.query.mockResolvedValueOnce([[existingEvent]]);
+    // Mock the connection execute for update
+    mockConnection.execute.mockResolvedValueOnce([{}]);
+    // Mock the second connection query for getting updated event
+    mockConnection.query.mockResolvedValueOnce([[updatedEvent]]);
 
     // Execute
     const result = await EventService.updateEvent(eventId, updateData);
 
     // Assert
-    expect(mockDb.execute).toHaveBeenCalledWith(
+    expect(mockConnection.execute).toHaveBeenCalledWith(
       'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ?, slug = ?, gforms_url = ?, schedule_end = ? WHERE id = ?',
       [
         existingEvent.org_id,
@@ -276,12 +286,12 @@ describe('EventService Unit Tests', () => {
 
     const updatedEvent = { ...existingEvent, ...updateData };
 
-    // Mock getEventById call in updateEvent
-    mockDb.query.mockResolvedValueOnce([[existingEvent]]);
-    // Mock the update execute call
-    mockDb.execute.mockResolvedValueOnce([{}]);
-    // Mock the second getEventById call
-    mockDb.query.mockResolvedValueOnce([[updatedEvent]]);
+    // Mock connection query for getting existing event
+    mockConnection.query.mockResolvedValueOnce([[existingEvent]]);
+    // Mock connection execute for update
+    mockConnection.execute.mockResolvedValueOnce([{}]);
+    // Mock the second connection query for getting updated event
+    mockConnection.query.mockResolvedValueOnce([[updatedEvent]]);
 
     // Execute
     const result = await EventService.updateEvent(eventId, updateData);
@@ -315,6 +325,7 @@ describe('EventService Unit Tests', () => {
       { id: 2, title: 'event, mock', org_id: 2 },
     ];
 
+    // Make sure we're returning exactly what's expected in the assertion
     mockDb.query.mockResolvedValueOnce([mock_events]);
 
     const result = await EventService.getEventBySearch(search);

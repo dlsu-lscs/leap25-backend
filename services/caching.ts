@@ -5,6 +5,8 @@ import {
   getRedisClient,
 } from '../config/redis';
 import { getAllEvents } from './event.service';
+import { getDB } from '../config/database';
+import type { Event } from '../models/Event';
 
 /**
  * Initialize event cache in Redis
@@ -59,35 +61,91 @@ export const startConsistencyChecks = (): NodeJS.Timeout => {
   return setInterval(
     async () => {
       if (!isRedisReady()) {
+        console.log('Redis not ready, skipping consistency check');
         return;
       }
 
       try {
-        const events = await getAllEvents();
-        let fixed = 0;
+        // Get all events using a transaction for consistency
+        const db = await getDB();
+        const connection = await db.getConnection();
+        let events: Event[] = [];
 
-        // process in batches
+        try {
+          await connection.beginTransaction();
+          const [rows] = await connection.query(
+            'SELECT id, max_slots, registered_slots FROM events'
+          );
+          await connection.commit();
+          events = rows as Event[];
+        } catch (dbError) {
+          await connection.rollback();
+          console.error('Error getting events for consistency check:', dbError);
+          return;
+        } finally {
+          connection.release();
+        }
+
+        // Stats tracking
+        let fixed = 0;
+        let consistent = 0;
+        let errors = 0;
+        let unavailable = 0;
+
+        // Process in batches to avoid overwhelming Redis
         const batchSize = 50;
         for (let i = 0; i < events.length; i += batchSize) {
           const batch = events.slice(i, i + batchSize);
+          const results = await Promise.allSettled(
+            batch.map((event) =>
+              redisEventOps.verifyEventSlotsConsistency(event.id, event)
+            )
+          );
 
-          for (const event of batch) {
-            const isConsistent =
-              await redisEventOps.verifyEventSlotsConsistency(event.id, event);
-            if (!isConsistent) fixed++;
-          }
+          // Process results
+          results.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+              const checkResult = result.value;
+              switch (checkResult.status) {
+                case 'consistent':
+                  consistent++;
+                  break;
+                case 'inconsistent':
+                  if (checkResult.fixed) fixed++;
+                  break;
+                case 'unavailable':
+                  unavailable++;
+                  break;
+                case 'error':
+                  errors++;
+                  console.error(
+                    `Error for event ${batch[index]?.id}: ${checkResult.message}`
+                  );
+                  break;
+              }
+            } else {
+              errors++;
+              console.error(
+                `Failed to check event ${batch[index]?.id}:`,
+                result.reason
+              );
+            }
+          });
 
-          // small delay between batches
+          // Small delay between batches to avoid overwhelming Redis
           if (i + batchSize < events.length) {
             await new Promise((resolve) => setTimeout(resolve, 100));
           }
         }
 
-        if (fixed > 0) {
-          console.log(
-            `Fixed ${fixed} inconsistent event slot records in Redis`
-          );
-        }
+        // Log summary
+        console.log(`Event slots consistency check completed:
+          - Total events: ${events.length}
+          - Consistent: ${consistent}
+          - Fixed: ${fixed}
+          - Errors: ${errors}
+          - Unavailable: ${unavailable}
+        `);
       } catch (error) {
         console.error('Error during event slots consistency check:', error);
       }
