@@ -40,7 +40,6 @@ export async function createEventMediaContentful(
       throw new Error('Error in getting payload asset.');
     }
 
-    const pub_type = fields.pubType['en-US'];
     const event_ref = fields.eventRef['en-US'].sys.id;
     const pub_url = await getImageUrlById(pub_asset);
     const contentful_id = payload.sys.id;
