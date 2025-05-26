@@ -30,11 +30,13 @@ export async function createOrgPayload(payload: any): Promise<Org | null> {
   const org_logo_id = fields.org_logo?.['en-US']?.sys?.id;
   const org_logo = org_logo_id ? await getImageUrlById(org_logo_id) : null;
   const name = fields.org_name?.['en-US'];
-  const org_url = fields.orgUrl?.['en-US'];
+  const org_url = fields.orgUrl?.['en-US'] ?? null;
 
   if (!name || !org_logo) {
     return null;
   }
+
+  console.log(org_url);
 
   const org = {
     name,
@@ -93,7 +95,7 @@ export async function updateOrgPayload(
   const org_logo_id = fields.org_logo?.['en-US']?.sys?.id;
   const org_logo = org_logo_id ? await getImageUrlById(org_logo_id) : null;
   const name = fields.org_name?.['en-US'];
-  const org_url = fields.orgUrl?.['en-US'];
+  const org_url = fields.orgUrl?.['en-US'] ?? null;
   const contentful_id = payload.sys.id;
 
   if (!contentful_id) return null;

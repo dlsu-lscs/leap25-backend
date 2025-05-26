@@ -3,7 +3,7 @@ export interface Org {
   name: string;
   org_logo: string;
   contentful_id: string;
-  org_url: string | undefined;
+  org_url?: string | null;
 }
 
 export interface CreateOrg {
@@ -16,5 +16,5 @@ export interface CreateOrg {
 export interface UpdateOrg {
   name?: string;
   org_logo?: string;
-  org_url?: string | undefined;
+  org_url?: string | null;
 }
