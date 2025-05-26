@@ -4,6 +4,7 @@ export interface Subtheme {
   logo_pub_url: string;
   background_pub_url: string;
   contentful_id: string;
+  short_desc?: string;
 }
 
 export interface CreateSubtheme {
@@ -11,6 +12,7 @@ export interface CreateSubtheme {
   logo_pub_url: string;
   background_pub_url: string;
   contentful_id: string;
+  short_desc?: string;
 }
 
 export interface UpdateSubtheme {
@@ -18,4 +20,5 @@ export interface UpdateSubtheme {
   logo_pub_url?: string;
   background_pub_url?: string;
   contentful_id: string;
+  short_desc?: string;
 }

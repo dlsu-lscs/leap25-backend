@@ -8,12 +8,13 @@ import type {
 } from '../models/Subtheme';
 
 export async function createSubtheme(data: CreateSubtheme): Promise<Subtheme> {
-  const { title, logo_pub_url, background_pub_url, contentful_id } = data;
+  const { title, logo_pub_url, background_pub_url, contentful_id, short_desc } =
+    data;
   const db = await getDB();
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO subthemes (title, logo_pub_url, background_pub_url, contentful_id) VALUES (?, ?, ?, ?)',
-    [title, logo_pub_url, background_pub_url, contentful_id]
+    'INSERT INTO subthemes (title, logo_pub_url, background_pub_url, contentful_id, short_desc) VALUES (?, ?, ?, ?, ?)',
+    [title, logo_pub_url, background_pub_url, contentful_id, short_desc ?? null]
   );
 
   const insertId = result.insertId;
@@ -41,12 +42,14 @@ export async function createSubthemePayload(
   )) as string;
 
   const contentful_id = payload.sys.id;
+  const short_desc = fields.shortDesc?.['en-US'] as string | undefined;
 
   const subtheme = {
     title: fields.title['en-US'] as string,
     logo_pub_url,
     background_pub_url,
     contentful_id,
+    short_desc,
   };
 
   if (!subtheme.title || !logo_pub_url || !background_pub_url) {
@@ -91,11 +94,12 @@ export async function updateSubtheme(
     title = existing.title,
     logo_pub_url = existing.logo_pub_url,
     background_pub_url = existing.background_pub_url,
+    short_desc = existing.short_desc ?? null,
   } = data;
   const db = await getDB();
   await db.execute(
-    'UPDATE subthemes SET title = ?, logo_pub_url = ?, background_pub_url = ? WHERE id = ?',
-    [title, logo_pub_url, background_pub_url, id]
+    'UPDATE subthemes SET title = ?, logo_pub_url = ?, background_pub_url = ?, short_desc = ? WHERE id = ?',
+    [title, logo_pub_url, background_pub_url, short_desc ?? null, id]
   );
 
   return getSubthemeById(id);
@@ -125,11 +129,14 @@ export async function updateSubthemePayload(
 
   if (!subtheme) throw new Error('No subtheme found with given contentful id');
 
+  const short_desc = fields.shortDesc?.['en-US'] || subtheme.short_desc;
+
   const updated_subtheme: UpdateSubtheme = {
     title: title || subtheme.title,
     logo_pub_url: logo_pub_url || subtheme.logo_pub_url,
     background_pub_url: background_pub_url || subtheme.background_pub_url,
     contentful_id,
+    short_desc,
   };
 
   return await updateSubtheme(subtheme.id, updated_subtheme);
