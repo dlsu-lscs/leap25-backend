@@ -20,8 +20,8 @@ import highlightRouter from './routes/highlight.routes';
 import bookmarkRouter from './routes/bookmark.routes';
 
 import {
-  initializeEventCache,
-  startConsistencyChecks,
+  initializeEventCacheWithLeaderElection,
+  startConsistencyChecksWithLeaderElection,
 } from './services/caching';
 
 // import SmeeClient from 'smee-client';
@@ -74,10 +74,10 @@ const startServer = async (): Promise<void> => {
     console.log('Session configured');
 
     // init event cache in Redis
-    await initializeEventCache();
+    await initializeEventCacheWithLeaderElection();
 
     // start periodic consistency checks
-    const consistencyTimer = startConsistencyChecks();
+    const consistencyTimer = startConsistencyChecksWithLeaderElection();
 
     app.use('/auth', authRouter);
     app.use('/users', userRouter);
