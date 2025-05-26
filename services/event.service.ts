@@ -86,6 +86,7 @@ export async function createEventPayload(
   if (!org) {
     return null;
   }
+
   const contentful_id = org.contentful_id;
   const [orgs] = (await db.query(
     'SELECT id FROM orgs WHERE contentful_id = ?',
@@ -123,9 +124,11 @@ export async function createEventPayload(
     max_slots: max_slots,
     contentful_id: payload.sys.id,
     slug: fields.slug?.['en-US'],
-    gforms_url: fields.gforms_url?.['en-US'],
+    gforms_url: fields.gFormsUrl?.['en-US'],
     schedule_end: new Date(fields.scheduleEnd?.['en-US']),
   };
+
+  console.log(event);
 
   return await createEvent(event);
 }
@@ -319,7 +322,7 @@ export async function updateEventPayload(payload: any): Promise<Event | null> {
     registered_slots: max_slots - available_slots,
     max_slots: max_slots,
     slug: fields.slug?.['en-US'],
-    gforms_url: fields.gforms_url?.['en-US'],
+    gforms_url: fields.gFormsUrl?.['en-US'],
     schedule_end: new Date(fields.scheduleEnd?.['en-US']),
   };
 
