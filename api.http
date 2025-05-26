@@ -2,10 +2,12 @@
 
 ### Global Variables
 @baseUrl = http://localhost:3000
-// @prodUrl = http://leap25-dev.api.dlsu-lscs.org
-# @baseUrl = http://leap25-dev.api.dlsu-lscs.org
+# @baseUrl = https://leap25-dev.api.dlsu-lscs.org
 @userId = 7
 @eventId = 1
+@orgId = 1
+@subthemeId = 1
+@contentfulId = abc123
 
 ### Basic Server Ping
 GET {{baseUrl}}
@@ -24,6 +26,10 @@ Accept: application/json
 
 ### Get All Users
 GET {{baseUrl}}/users
+Accept: application/json
+
+### Get User by Email
+GET {{baseUrl}}/users?email=test@example.com
 Accept: application/json
 
 ### Get User by ID
@@ -58,8 +64,24 @@ Accept: application/json
 GET {{baseUrl}}/events
 Accept: application/json
 
+### Get Event by Code
+GET {{baseUrl}}/events?code=WORKSHOP101
+Accept: application/json
+
+### Get Events by Day
+GET {{baseUrl}}/events?day=1
+Accept: application/json
+
 ### Get Event by ID
 GET {{baseUrl}}/events/{{eventId}}
+Accept: application/json
+
+### Get Event by Slug
+GET {{baseUrl}}/events/slug/test-event-slug
+Accept: application/json
+
+### Search Events
+GET {{baseUrl}}/events/search?q=workshop
 Accept: application/json
 
 ### Get Event by Subtheme Title
@@ -70,38 +92,29 @@ Content-Type: application/json
   "subtheme": "Test Subtheme with Image"
 }
 
+### Get Event Media
+GET {{baseUrl}}/events/{{eventId}}/media
+Accept: application/json
+
 ### Create Event
 POST {{baseUrl}}/events
 Content-Type: application/json
 
 {
-  "org_id": 1000,
+  "org_id": 1,
   "title": "Workshop on Node.js",
-  "subtheme_id": 1000,
+  "subtheme_id": 1,
   "description": "Learn Node.js basics",
   "venue": "Online",
   "schedule": "2023-12-30 10:00:00",
+  "schedule_end": "2023-12-30 12:00:00",
   "fee": 0,
   "code": "WORKSHOP101",
   "max_slots": 50,
-  "registered_slots": 0
-}
-
-### Create Event with all fields
-POST {{baseUrl}}/events
-Content-Type: application/json
-
-{
-  "org_id": 1,
-  "title": "Advanced Workshop on Node.js",
-  "description": "Learn advanced Node.js concepts",
-  "subtheme_id": 1,
-  "venue": "Online Room 2",
-  "schedule": "2023-12-31 14:00:00",
-  "fee": 10,
-  "code": "ADVWORKSHOP101",
-  "max_slots": 30,
-  "registered_slots": 0
+  "registered_slots": 0,
+  "contentful_id": "abc123",
+  "slug": "workshop-nodejs",
+  "gforms_url": "https://forms.google.com/example"
 }
 
 ### Update Event
@@ -117,6 +130,10 @@ Content-Type: application/json
 DELETE {{baseUrl}}/events/{{eventId}}
 Accept: application/json
 
+### Get Event Slots
+GET {{baseUrl}}/events/{{eventId}}/slots
+Accept: application/json
+
 ### Organizations Endpoints ###
 
 ### Get All Organizations
@@ -124,7 +141,7 @@ GET {{baseUrl}}/orgs
 Accept: application/json
 
 ### Get Organization by ID
-GET {{baseUrl}}/orgs/1
+GET {{baseUrl}}/orgs/{{orgId}}
 Accept: application/json
 
 ### Create Organization
@@ -133,11 +150,13 @@ Content-Type: application/json
 
 {
   "name": "Test Organization",
-  "org_logo": "https://example.com/logo.png"
+  "org_logo": "https://example.com/logo.png",
+  "contentful_id": "org_contentful_123",
+  "org_url": "https://organization.com"
 }
 
 ### Update Organization
-PUT {{baseUrl}}/orgs/1
+PUT {{baseUrl}}/orgs/{{orgId}}
 Content-Type: application/json
 
 {
@@ -145,7 +164,7 @@ Content-Type: application/json
 }
 
 ### Delete Organization
-DELETE {{baseUrl}}/orgs/1
+DELETE {{baseUrl}}/orgs/{{orgId}}
 Accept: application/json
 
 ### Subthemes Endpoints ###
@@ -154,8 +173,12 @@ Accept: application/json
 GET {{baseUrl}}/subthemes
 Accept: application/json
 
+### Get Subtheme by Name
+GET {{baseUrl}}/subthemes?name=DevOps
+Accept: application/json
+
 ### Get Subtheme by ID
-GET {{baseUrl}}/subthemes/1000
+GET {{baseUrl}}/subthemes/{{subthemeId}}
 Accept: application/json
 
 ### Create Subtheme
@@ -163,13 +186,14 @@ POST {{baseUrl}}/subthemes
 Content-Type: application/json
 
 {
-  "title": "Test Subtheme7",
+  "title": "Test Subtheme",
   "logo_pub_url": "https://example.com/logo.png",
-  "background_pub_url": "https://example.com/bg.png"
+  "background_pub_url": "https://example.com/bg.png",
+  "contentful_id": "subtheme_contentful_123"
 }
 
 ### Update Subtheme
-PUT {{baseUrl}}/subthemes/1
+PUT {{baseUrl}}/subthemes/{{subthemeId}}
 Content-Type: application/json
 
 {
@@ -177,7 +201,48 @@ Content-Type: application/json
 }
 
 ### Delete Subtheme
-DELETE {{baseUrl}}/subthemes/1
+DELETE {{baseUrl}}/subthemes/{{subthemeId}}
+Accept: application/json
+
+### Highlights Endpoints ###
+
+### Get All Highlights
+GET {{baseUrl}}/highlights
+Accept: application/json
+
+### Get Highlight by ID
+GET {{baseUrl}}/highlights/1
+Accept: application/json
+
+### Get Highlight by Contentful ID
+GET {{baseUrl}}/highlights/contentful/{{contentfulId}}
+Accept: application/json
+
+### Create Highlight
+POST {{baseUrl}}/highlights
+Content-Type: application/json
+
+{
+  "event_id": {{eventId}},
+  "title_fallback": "Featured Workshop",
+  "title_card": "https://example.com/title-card.jpg",
+  "bg_img": "https://example.com/background.jpg",
+  "short_desc": "A brief description of the highlight",
+  "color": "#3366FF",
+  "contentful_id": "highlight_contentful_123"
+}
+
+### Update Highlight
+PUT {{baseUrl}}/highlights/1
+Content-Type: application/json
+
+{
+  "title_fallback": "Updated Featured Workshop",
+  "short_desc": "Updated description"
+}
+
+### Delete Highlight
+DELETE {{baseUrl}}/highlights/highlight_contentful_123
 Accept: application/json
 
 ### Authentication Endpoints ###
@@ -190,9 +255,7 @@ Content-Type: application/json
   "token": "your-google-access-token"
 }
 
-### Get Event Available Slots
-GET {{baseUrl}}/events/{{eventId}}/slots
-Accept: application/json
+### Registration Endpoints ###
 
 ### Register User for an Event
 POST {{baseUrl}}/registrations
@@ -207,81 +270,40 @@ Content-Type: application/json
 GET {{baseUrl}}/users/{{userId}}/registrations
 Accept: application/json
 
+### Bookmarks Endpoints ###
 
-### Redis Event Slots Test Plan
-
-### 1. Create a Test Event
-POST {{baseUrl}}/events
+### Create Bookmark
+POST {{baseUrl}}/bookmarks
 Content-Type: application/json
 
 {
-  "org_id": 999,
-  "title": "Redis Test Event",
-  "description": "Event for testing Redis slots functionality",
-  "subtheme_id": 1000,
-  "venue": "Online",
-  "schedule": "2023-12-30 10:00:00",
-  "fee": 0,
-  "code": "REDISTEST",
-  "max_slots": 10
+  "user_id": {{userId}},
+  "event_id": {{eventId}}
 }
 
-### 2. Set the event ID variable after receiving the response
-@redisTestEventId = 5
-
-### 3. Check Available Slots (should be 10 available)
-GET {{baseUrl}}/events/{{redisTestEventId}}/slots
+### Get User Bookmarks
+GET {{baseUrl}}/users/{{userId}}/bookmarks
 Accept: application/json
 
-### 4. Register a user for the event
-POST {{baseUrl}}/registrations
+### Delete Bookmark
+DELETE {{baseUrl}}/bookmarks
 Content-Type: application/json
 
 {
-  "user_id": 7,
-  "event_id": {{redisTestEventId}}
+  "user_id": {{userId}},
+  "event_id": {{eventId}}
 }
 
-### 5. Check Available Slots Again (should be 9 available)
-GET {{baseUrl}}/events/{{redisTestEventId}}/slots
+### Redis Cache Inspection Endpoints ###
+
+### Get all event-related keys in Redis
+GET {{baseUrl}}/health/redis
 Accept: application/json
 
-### 6. Update Event Max Slots
-PUT {{baseUrl}}/events/{{redisTestEventId}}
-Content-Type: application/json
-
-{
-  "max_slots": 20
-}
-
-### 7. Check Available Slots After Update (should be 19 available)
-GET {{baseUrl}}/events/{{redisTestEventId}}/slots
+### Get a specific Redis key by name
+GET {{baseUrl}}/health/redis/key/event:1:slots
 Accept: application/json
 
-### 8. Register multiple users in succession
-
-#### -- Register user 2
-POST {{baseUrl}}/registrations
-Content-Type: application/json
-
-{
-  "user_id": 5,
-  "event_id": {{redisTestEventId}}
-}
-
-#### -- Register user 3
-POST {{baseUrl}}/registrations
-Content-Type: application/json
-
-{
-  "user_id": 8,
-  "event_id": {{redisTestEventId}}
-}
-
-### 9. Final Slot Check (should be 17 available)
-GET {{baseUrl}}/events/{{redisTestEventId}}/slots
-Accept: application/json
-
-### 10. Get Event Details to Verify Database Consistency
-GET {{baseUrl}}/events/{{redisTestEventId}}
+### Get Redis server statistics
+GET {{baseUrl}}/health/redis-stats
 Accept: application/json
