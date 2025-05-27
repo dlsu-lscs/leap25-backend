@@ -1,6 +1,7 @@
 import { getDB } from '../config/database';
 import { getRedisClient, isRedisReady } from '../config/redis';
 import { Router } from 'express';
+import { initializeEventCacheWithProgress } from '../services/caching';
 
 const router = Router();
 
@@ -159,6 +160,99 @@ router.get('/redis-stats', async (_, res) => {
     console.error('Error getting Redis stats:', error);
     res.status(500).json({
       error: 'Error getting Redis stats',
+      message: (error as Error).message,
+    });
+  }
+});
+
+// Admin endpoints for cache management
+router.post('/cache/reinitialize', async (req, res) => {
+  try {
+    // const authHeader = req.headers.authorization;
+    // if (!authHeader || authHeader !== `Bearer ${process.env.ADMIN_API_KEY}`) {
+    //   res.status(401).json({ error: 'Unauthorized' });
+    //   return;
+    // }
+
+    let inProgress = true;
+
+    res.status(202).json({
+      message: 'Cache reinitialization started',
+      checkStatusAt: '/health/cache/status',
+    });
+
+    const client = getRedisClient();
+    if (client) {
+      await client.set(
+        'cache:reinitialization:status',
+        JSON.stringify({
+          startedAt: new Date().toISOString(),
+          progress: 'starting',
+          completedEvents: 0,
+        })
+      );
+
+      await client.set('cache:manual_reinitialization', '1', { EX: 3600 });
+    }
+
+    await initializeEventCacheWithProgress();
+  } catch (error) {
+    console.error('Error triggering cache reinitialization:', error);
+    res.status(500).json({
+      error: 'Failed to start cache reinitialization',
+      message: (error as Error).message,
+    });
+  }
+});
+
+// Status endpoint
+router.get('/cache/status', async (req, res) => {
+  try {
+    const client = getRedisClient();
+    if (!client) {
+      res.status(503).json({ error: 'Redis not available' });
+      return;
+    }
+
+    const status = await client.get('cache:reinitialization:status');
+    if (!status) {
+      res.status(404).json({
+        message: 'No cache reinitialization in progress or recently completed',
+      });
+      return;
+    }
+
+    res.status(200).json(JSON.parse(status));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get cache status' });
+  }
+});
+
+router.get('/cache/consistency/status', async (_, res) => {
+  try {
+    const redis = getRedisClient();
+
+    if (!isRedisReady() || !redis) {
+      res.status(503).json({ error: 'Redis not available' });
+      return;
+    }
+
+    const status = await redis.get('cache:consistency:status');
+
+    if (!status) {
+      res.status(200).json({
+        message: 'No recent consistency check information available',
+        lastCheck: null,
+      });
+      return;
+    }
+
+    const statusData = JSON.parse(status);
+    res.status(200).json(statusData);
+  } catch (error) {
+    console.error('Error getting consistency check status:', error);
+    res.status(500).json({
+      error: 'Failed to get consistency check status',
       message: (error as Error).message,
     });
   }
