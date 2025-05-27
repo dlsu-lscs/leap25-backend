@@ -67,32 +67,31 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  prepare-migrations:
-    name: Prepare Database Migrations
-    needs: build-and-push
-    if: needs.build-and-push.outputs.has_migrations == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Package migrations
-        run: |
-          tar -czf migrations.tar.gz migrations/
-          echo "Migration files to be applied:"
-          ls -la migrations/*.sql
-
-      - name: Upload migrations artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: migrations-${{ github.sha }}
-          path: migrations.tar.gz
-          retention-days: 5
+  # prepare-migrations:
+  #   name: Prepare Database Migrations
+  #   needs: build-and-push
+  #   if: needs.build-and-push.outputs.has_migrations == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Package migrations
+  #       run: |
+  #         tar -czf migrations.tar.gz migrations/
+  #         echo "Migration files to be applied:"
+  #         ls -la migrations/*.sql
+  #
+  #     - name: Upload migrations artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: migrations-${{ github.sha }}
+  #         path: migrations.tar.gz
+  #         retention-days: 5
 
   trigger-deployment:
     name: Trigger Infrastructure Deployment
-    needs: [build-and-push, prepare-migrations]
-    # Run even if prepare-migrations was skipped (but not if it failed)
-    if: "always() && \nneeds.build-and-push.result == 'success' && \n(needs.prepare-migrations.result == 'success' || needs.prepare-migrations.result == 'skipped')\n"
+    needs: [build-and-push]
+    if: "always() && \nneeds.build-and-push.result == 'success'"
     runs-on: ubuntu-latest
     steps:
       - name: Debug info
@@ -103,7 +102,7 @@ jobs:
           echo "Has migrations: ${{ needs.build-and-push.outputs.has_migrations }}"
           echo "SHA: ${{ needs.build-and-push.outputs.commit_sha }}"
 
-      - name: Trigger deployment workflow
+      - name: Trigger deployment notification
         id: dispatch
         uses: peter-evans/repository-dispatch@v2
         with:
@@ -117,12 +116,3 @@ jobs:
               "branch": "${{ needs.build-and-push.outputs.branch }}",
               "commit_sha": "${{ needs.build-and-push.outputs.commit_sha }}"
             }
-
-      - name: Verify dispatch result
-        run: |
-          if [[ "${{ steps.dispatch.outputs.status_code }}" == "204" ]]; then
-            echo "✅ Successfully triggered deployment workflow"
-          else
-            echo "❌ Failed to trigger deployment workflow: ${{ steps.dispatch.outputs.status_code }}"
-            exit 1
-          fi

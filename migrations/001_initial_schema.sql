@@ -1,8 +1,8 @@
 -- Check if migrations table exists, if not create it
 CREATE TABLE IF NOT EXISTS migrations (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  version VARCHAR(255) NOT NULL UNIQUE,
+  applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Users table
