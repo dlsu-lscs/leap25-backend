@@ -3,6 +3,7 @@
 ### Global Variables
 @baseUrl = http://localhost:3000
 # @baseUrl = https://leap25-dev.api.dlsu-lscs.org
+# @baseUrl = https://api.dlsucso-leap.com
 @userId = 7
 @eventId = 1
 @orgId = 1
@@ -189,7 +190,8 @@ Content-Type: application/json
   "title": "Test Subtheme",
   "logo_pub_url": "https://example.com/logo.png",
   "background_pub_url": "https://example.com/bg.png",
-  "contentful_id": "subtheme_contentful_123"
+  "contentful_id": "subtheme_contentful_123",
+  "short_desc": "A brief description of this subtheme"
 }
 
 ### Update Subtheme
@@ -197,7 +199,8 @@ PUT {{baseUrl}}/subthemes/{{subthemeId}}
 Content-Type: application/json
 
 {
-  "title": "Updated Subtheme Name"
+  "title": "Updated Subtheme Name",
+  "short_desc": "Updated description"
 }
 
 ### Delete Subtheme
@@ -306,4 +309,19 @@ Accept: application/json
 
 ### Get Redis server statistics
 GET {{baseUrl}}/health/redis-stats
+Accept: application/json
+
+### Cache Management Endpoints for Multiple Replicas ###
+
+### Manually reinitialize the Redis cache (admin endpoint)
+POST {{baseUrl}}/health/cache/reinitialize
+Content-Type: application/json
+# Authorization: Bearer your-admin-api-key-here
+
+### Check status of cache reinitialization
+GET {{baseUrl}}/health/cache/status
+Accept: application/json
+
+### Check status of consistency checks
+GET {{baseUrl}}/health/cache/consistency/status
 Accept: application/json
