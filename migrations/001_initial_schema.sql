@@ -1,8 +1,8 @@
--- Check if migrations table exists, if not create it
+-- Migrations table
 CREATE TABLE IF NOT EXISTS migrations (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  version VARCHAR(255) NOT NULL UNIQUE,
+  applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Users table
@@ -11,31 +11,37 @@ CREATE TABLE IF NOT EXISTS users (
   google_id VARCHAR(255) UNIQUE,
   email VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
-  display_picture TEXT,
+  display_picture VARCHAR(2083),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_users_email (email),
+  INDEX idx_users_google_id (google_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Organizations table
 CREATE TABLE IF NOT EXISTS orgs (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  org_logo TEXT,
-  org_url VARCHAR(255),
-  contentful_id VARCHAR(80) NOT NULL
+  org_logo VARCHAR(2083),
+  org_url VARCHAR(2083),
+  contentful_id VARCHAR(80) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_orgs_contentful_id (contentful_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Subthemes table
 CREATE TABLE IF NOT EXISTS subthemes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
-  logo_pub_url TEXT,
-  background_pub_url TEXT,
+  logo_pub_url VARCHAR(2083),
+  background_pub_url VARCHAR(2083),
   contentful_id VARCHAR(80) NOT NULL,
+  short_desc VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_subthemes_contentful_id (contentful_id),
+  INDEX idx_subthemes_title (title)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Events table
@@ -47,18 +53,24 @@ CREATE TABLE IF NOT EXISTS events (
   subtheme_id INT,
   venue VARCHAR(255),
   schedule DATETIME NOT NULL,
+  schedule_end DATETIME NOT NULL,
   fee DECIMAL(10, 2) DEFAULT 0,
   code VARCHAR(50) NOT NULL,
   registered_slots INT DEFAULT 0,
   max_slots INT NOT NULL,
   contentful_id VARCHAR(80) NOT NULL,
   slug VARCHAR(80) NOT NULL,
-  gforms_url TEXT NOT NULL,
+  gforms_url VARCHAR(2083) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE,
   FOREIGN KEY (subtheme_id) REFERENCES subthemes(id) ON DELETE SET NULL,
-  UNIQUE KEY (code)
+  UNIQUE KEY (code),
+  UNIQUE KEY (slug),
+  INDEX idx_events_contentful_id (contentful_id),
+  INDEX idx_events_title (title),
+  INDEX idx_events_schedule (schedule),
+  INDEX idx_events_subtheme_id (subtheme_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Registrations table
@@ -70,43 +82,42 @@ CREATE TABLE IF NOT EXISTS registrations (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
-  UNIQUE KEY (user_id, event_id)
+  UNIQUE KEY (user_id, event_id),
+  INDEX idx_registrations_event_id (event_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Highlight Events table
-CREATE TABLE highlights (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    event_id INT NOT NULL,
-    title_card TEXT,
-    title_fallback VARCHAR(80) NOT NULL,
-    bg_img TEXT,
-    short_desc VARCHAR(255) NOT NULL,
-    color VARCHAR(50) NOT NULL,
-    contentful_id VARCHAR(80) NOT NULL,
-    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS highlights (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event_id INT NOT NULL,
+  title_card VARCHAR(2083),
+  title_fallback VARCHAR(80) NOT NULL,
+  bg_img VARCHAR(2083),
+  short_desc VARCHAR(255) NOT NULL,
+  color VARCHAR(50) NOT NULL,
+  contentful_id VARCHAR(80) NOT NULL,
+  FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+  INDEX idx_highlights_contentful_id (contentful_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Event pubs table
-CREATE TABLE event_pubs (
-    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    event_id INT(11),
-    pub_type ENUM('TEXTLESS_VERTICAL','TEXTLESS_HORIZONTAL','MAIN') NOT NULL,
-    pub_url TEXT,
-    contentful_id VARCHAR(80) NOT NULL,
-    FOREIGN KEY event_id (event_id)
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS event_pubs (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  event_id INT,
+  pub_type ENUM('TEXTLESS_VERTICAL','TEXTLESS_HORIZONTAL','MAIN') NOT NULL,
+  pub_url VARCHAR(2083),
+  contentful_id VARCHAR(80) NOT NULL,
+  FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+  INDEX idx_event_pubs_contentful_id (contentful_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- User bookmarked events table
-CREATE TABLE bookmarks (
+CREATE TABLE IF NOT EXISTS bookmarks (
   id INT AUTO_INCREMENT PRIMARY KEY,
   event_id INT NOT NULL,
   user_id INT NOT NULL,
   FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE KEY (user_id, event_id)
+  UNIQUE KEY (user_id, event_id),
+  INDEX idx_bookmarks_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-

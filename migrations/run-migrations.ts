@@ -17,6 +17,8 @@ async function runMigrations(): Promise<void> {
   const conn = await db.getConnection();
 
   try {
+    // for transaction consistency
+    await conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
     await conn.beginTransaction();
 
     await conn.execute(`
@@ -27,17 +29,41 @@ async function runMigrations(): Promise<void> {
       )
     `);
 
+    // applied migrations for comparison
     const [applied] = await conn.query('SELECT version FROM migrations');
     const appliedVersions = new Set(
       (applied as any[]).map((row) => row.version)
     );
 
+    // migration files
     const migrationsDir = path.join(process.cwd(), 'migrations');
     const migrationFiles = fs
       .readdirSync(migrationsDir)
       .filter((file) => file.endsWith('.sql'))
       .sort();
 
+    console.log(
+      `Found ${migrationFiles.length} migration files, ${appliedVersions.size} already applied`
+    );
+
+    // warn if have migration gaps
+    const migrationNumbers = migrationFiles.map((file) => {
+      const match = file.match(/^(\d+)_/);
+      return match ? parseInt(match[1] as string, 10) : 0;
+    });
+
+    const uniqueSortedNumbers = [...new Set(migrationNumbers)].sort(
+      (a, b) => a - b
+    );
+    for (let i = 1; i < uniqueSortedNumbers.length; i++) {
+      if (uniqueSortedNumbers[i] !== uniqueSortedNumbers[i - 1]! + 1) {
+        console.warn(
+          `Warning: Migration sequence has gaps between ${uniqueSortedNumbers[i - 1]} and ${uniqueSortedNumbers[i]}`
+        );
+      }
+    }
+
+    // apply migrations that are not yet applied
     for (const file of migrationFiles) {
       const version = path.basename(file, '.sql');
 
@@ -49,19 +75,42 @@ async function runMigrations(): Promise<void> {
       console.log(`Applying migration: ${version}`);
       const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
 
+      if (!sql.trim()) {
+        console.warn(`Warning: Migration file ${file} appears to be empty`);
+        continue;
+      }
+
+      const dangerousPatterns = [/DROP\s+DATABASE/i, /DROP\s+USER/i];
+
+      for (const pattern of dangerousPatterns) {
+        if (pattern.test(sql)) {
+          console.warn(
+            `⚠️ Warning: Migration ${file} contains potentially dangerous pattern: ${pattern}`
+          );
+        }
+      }
+
       const commands = sql
         .split(';')
         .map((cmd) => cmd.trim())
         .filter((cmd) => cmd.length > 0);
 
       for (const command of commands) {
-        await conn.execute(`${command};`);
+        try {
+          await conn.execute(`${command};`);
+        } catch (error) {
+          console.error(`Error executing SQL: ${command}`);
+          console.error(error);
+          throw new Error(
+            `Migration failed in file ${file}: ${(error as Error).message}`
+          );
+        }
       }
 
       await conn.execute('INSERT INTO migrations (version) VALUES (?)', [
         version,
       ]);
-      console.log(`Migration ${version} applied successfully`);
+      console.log(`✓ Migration ${version} applied successfully`);
     }
 
     await conn.commit();
