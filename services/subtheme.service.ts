@@ -153,7 +153,7 @@ export async function handleContentfulWebhook(payload: any): Promise<{
 }> {
   const contentful_id = payload.sys.id;
 
-  const existing_subtheme = getSubthemeByContentfulId(contentful_id);
+  const existing_subtheme = await getSubthemeByContentfulId(contentful_id);
 
   const is_exists: boolean = !!existing_subtheme;
 
