@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS migrations (
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   google_id VARCHAR(255) UNIQUE,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE,
+  name VARCHAR(255),
   display_picture VARCHAR(2083),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS orgs (
   name VARCHAR(255) NOT NULL,
   org_logo VARCHAR(2083),
   org_url VARCHAR(2083),
-  contentful_id VARCHAR(80) NOT NULL,
+  contentful_id VARCHAR(180),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_orgs_contentful_id (contentful_id)
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS subthemes (
   title VARCHAR(255) NOT NULL,
   logo_pub_url VARCHAR(2083),
   background_pub_url VARCHAR(2083),
-  contentful_id VARCHAR(80) NOT NULL,
+  contentful_id VARCHAR(180),
   short_desc VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -49,18 +49,18 @@ CREATE TABLE IF NOT EXISTS events (
   id INT AUTO_INCREMENT PRIMARY KEY,
   org_id INT NOT NULL,
   title VARCHAR(255) NOT NULL,
-  description TEXT,
+  description VARCHAR(255),
   subtheme_id INT,
-  venue VARCHAR(255),
-  schedule DATETIME NOT NULL,
-  schedule_end DATETIME NOT NULL,
+  venue VARCHAR(128),
+  schedule DATETIME,
+  schedule_end DATETIME,
   fee DECIMAL(10, 2) DEFAULT 0,
-  code VARCHAR(50) NOT NULL,
+  code VARCHAR(50),
   registered_slots INT DEFAULT 0,
   max_slots INT NOT NULL,
-  contentful_id VARCHAR(80) NOT NULL,
-  slug VARCHAR(80) NOT NULL,
-  gforms_url VARCHAR(2083) NOT NULL,
+  contentful_id VARCHAR(180),
+  slug VARCHAR(80),
+  gforms_url VARCHAR(2083),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE,
@@ -90,23 +90,23 @@ CREATE TABLE IF NOT EXISTS registrations (
 CREATE TABLE IF NOT EXISTS highlights (
   id INT AUTO_INCREMENT PRIMARY KEY,
   event_id INT NOT NULL,
-  title_card VARCHAR(2083),
+  title_card TEXT,
   title_fallback VARCHAR(80) NOT NULL,
   bg_img VARCHAR(2083),
   short_desc VARCHAR(255) NOT NULL,
   color VARCHAR(50) NOT NULL,
-  contentful_id VARCHAR(80) NOT NULL,
+  contentful_id VARCHAR(180) NOT NULL,
   FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
   INDEX idx_highlights_contentful_id (contentful_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Event pubs table
 CREATE TABLE IF NOT EXISTS event_pubs (
-  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id INT AUTO_INCREMENT PRIMARY KEY,
   event_id INT,
-  pub_type ENUM('TEXTLESS_VERTICAL','TEXTLESS_HORIZONTAL','MAIN') NOT NULL,
+  pub_as_bg BOOLEAN,
   pub_url VARCHAR(2083),
-  contentful_id VARCHAR(80) NOT NULL,
+  contentful_id VARCHAR(180),
   FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
   INDEX idx_event_pubs_contentful_id (contentful_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -121,3 +121,5 @@ CREATE TABLE IF NOT EXISTS bookmarks (
   UNIQUE KEY (user_id, event_id),
   INDEX idx_bookmarks_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO migrations (version) VALUES ('001_initial_schema');
