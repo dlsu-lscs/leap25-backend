@@ -9,12 +9,12 @@ import type {
 import { getDB } from '../config/database';
 
 export async function createEventMedia(data: EventMedia): Promise<EventMedia> {
-  const { pub_url, event_id, contentful_id } = data;
+  const { pub_url, event_id, contentful_id, pub_as_bg } = data;
   const db = await getDB();
 
   const [new_event_media] = (await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO event_pubs (pub_url,  event_id, contentful_id) VALUES (?, ?, ?)',
-    [pub_url, event_id, contentful_id]
+    'INSERT INTO event_pubs (pub_url,  event_id, contentful_id, pub_as_bg) VALUES (?, ?, ?, ?)',
+    [pub_url, event_id, contentful_id, pub_as_bg]
   )) as any[];
 
   if (new_event_media.affectedRows === 0) {
@@ -42,6 +42,7 @@ export async function createEventMediaContentful(
 
     const event_ref = fields.eventRef['en-US'].sys.id;
     const pub_url = await getImageUrlById(pub_asset);
+    const pub_as_bg = fields.pubAsBg['en-US'];
     const contentful_id = payload.sys.id;
 
     const event = await getEventByContentfulId(event_ref);
@@ -56,6 +57,7 @@ export async function createEventMediaContentful(
       pub_url,
       event_id: event.id,
       contentful_id,
+      pub_as_bg,
     };
 
     const new_event_media = await createEventMedia(event_media);
@@ -71,12 +73,12 @@ export async function updateEventMedia(
   payload: UpdateEventMedia,
   contentful_id: string
 ): Promise<UpdateEventMedia> {
-  const { pub_url } = payload;
+  const { pub_url, pub_as_bg } = payload;
   const db = await getDB();
 
   const [result] = (await db.execute<mysql.ResultSetHeader>(
-    'UPDATE event_pubs SET pub_url = ? WHERE contentful_id = ?',
-    [pub_url ?? null, contentful_id]
+    'UPDATE event_pubs SET pub_url = ?, pub_as_bg = ? WHERE contentful_id = ?',
+    [pub_url ?? null, pub_as_bg ?? null, contentful_id]
   )) as any[];
 
   if (result.affectedRows === 0) {
@@ -95,8 +97,8 @@ export async function updateEventMediaContentful(
     const pub_asset = fields.pubOneFile?.['en-US']?.sys.id;
     if (!pub_asset) throw new Error('Missing publication asset ID.');
 
-    const pub_type = fields.pubType['en-US'];
     const pub_url = await getImageUrlById(pub_asset);
+    const pub_as_bg = fields.pubAsBg?.['en-US'];
     const contentful_id = payload.sys.id;
 
     if (!pub_url) {
@@ -105,7 +107,7 @@ export async function updateEventMediaContentful(
 
     const event_pub = {
       pub_url,
-      pub_type,
+      pub_as_bg,
     };
 
     const updated_event_pub = await updateEventMedia(event_pub, contentful_id);
