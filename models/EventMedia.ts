@@ -2,10 +2,12 @@ export interface EventMedia {
   pub_url: string;
   event_id: number;
   contentful_id: string;
+  pub_as_bg: boolean;
 }
 
 export interface UpdateEventMedia {
-  pub_url: string;
+  pub_url?: string;
+  pub_as_bg?: boolean;
 }
 
 export type EventMediaPayload = {
@@ -35,6 +37,9 @@ export type EventMediaPayload = {
           linkType: 'Entry';
         };
       };
+    };
+    pubAsBg: {
+      'en-US': boolean;
     };
   };
 };
