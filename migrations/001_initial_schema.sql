@@ -121,3 +121,6 @@ CREATE TABLE IF NOT EXISTS bookmarks (
   UNIQUE KEY (user_id, event_id),
   INDEX idx_bookmarks_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- record this migration in the migrations table
+INSERT INTO migrations (version) VALUES ('001_initial_schema');
