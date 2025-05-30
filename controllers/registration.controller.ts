@@ -15,7 +15,7 @@ export async function createRegistration(
     }
 
     const registration = await RegistrationService.registerUserForEvent({
-      user_id: Number(user_id),
+      user_id: user_id.map(Number),
       event_id: Number(event_id),
     });
 

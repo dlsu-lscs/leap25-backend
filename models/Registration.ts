@@ -5,6 +5,6 @@ export interface Registration {
 }
 
 export interface CreateRegistration {
-  user_id: number;
+  user_id: number[];
   event_id: number;
 }
