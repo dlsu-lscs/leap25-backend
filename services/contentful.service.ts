@@ -25,7 +25,7 @@ export async function getOrg(id: string): Promise<CreateOrg | null> {
   try {
     const org = await client.getEntry(id);
     const name = org.fields.org_name['en-US'];
-    const org_logo = org.fields.org_logo['en-US'];
+    const org_logo = org.fields.org_logo?.['en-US'];
     const contentful_id = org.sys.id;
 
     if (!org) {
