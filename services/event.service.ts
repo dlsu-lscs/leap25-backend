@@ -79,6 +79,7 @@ export async function createEventPayload(
 ): Promise<CreateEvent | null> {
   const fields = payload.fields;
   const org_id = fields.orgId['en-US'].sys.id;
+
   const db = await getDB();
 
   const org = await getOrg(org_id);
