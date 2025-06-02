@@ -32,7 +32,7 @@ export async function createOrgPayload(payload: any): Promise<Org | null> {
   const name = fields.org_name?.['en-US'];
   const org_url = fields.orgUrl?.['en-US'] ?? null;
 
-  if (!name || !org_logo) {
+  if (!name) {
     return null;
   }
 
