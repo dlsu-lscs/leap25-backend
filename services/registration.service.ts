@@ -6,9 +6,11 @@ import type { Registration, CreateRegistration } from '../models/Registration';
 // Create a new registration
 export async function registerUserForEvent(
   data: CreateRegistration
-): Promise<Registration | null> {
+): Promise<Registration[] | null> {
   const db = await getDB();
   const connection = await db.getConnection();
+  const user_ids = data.user_id;
+  const registrations: Registration[] = [];
 
   try {
     await connection.beginTransaction();
@@ -32,21 +34,31 @@ export async function registerUserForEvent(
     }
 
     // check if user already registered for this event
-    const [existingRegistration] = await connection.query(
-      'SELECT id FROM registrations WHERE user_id = ? AND event_id = ?',
-      [data.user_id, data.event_id]
-    );
+    let result: any;
 
-    if ((existingRegistration as any[]).length > 0) {
-      await connection.rollback();
-      throw new Error('User already registered for this event');
+    for (const user_id of user_ids) {
+      const [existingRegistration] = await connection.query(
+        'SELECT id FROM registrations WHERE user_id = ? AND event_id = ?',
+        [user_id, data.event_id]
+      );
+
+      if ((existingRegistration as any[]).length > 0) {
+        await connection.rollback();
+        throw new Error('User already registered for this event');
+      }
+
+      // create registration to db
+      result = await connection.execute<mysql.ResultSetHeader>(
+        'INSERT INTO registrations (user_id, event_id) VALUES (?, ?)',
+        [data.user_id, data.event_id]
+      );
+
+      registrations.push({
+        id: result.insertId,
+        user_id: user_id,
+        event_id: data.event_id,
+      });
     }
-
-    // create registration to db
-    const [result] = await connection.execute<mysql.ResultSetHeader>(
-      'INSERT INTO registrations (user_id, event_id) VALUES (?, ?)',
-      [data.user_id, data.event_id]
-    );
 
     // update event registered_slots
     await connection.execute(
@@ -59,13 +71,7 @@ export async function registerUserForEvent(
     // invalidate Redis cache for this event's slots so we can update it
     await redisEventOps.updateSlotsAfterRegistration(data.event_id);
 
-    const registration: Registration = {
-      id: result.insertId,
-      user_id: data.user_id,
-      event_id: data.event_id,
-    };
-
-    return registration;
+    return registrations;
   } catch (error) {
     await connection.rollback();
     console.error('Error creating registration:', error);
