@@ -14,6 +14,7 @@ export interface Event {
   slug: string;
   gforms_url: string;
   schedule_end: Date;
+  is_bundle: boolean;
 }
 
 export interface CreateEvent {
@@ -31,6 +32,7 @@ export interface CreateEvent {
   slug: string;
   gforms_url: string;
   schedule_end: Date;
+  is_bundle: boolean;
 }
 
 export interface UpdateEvent {
@@ -47,4 +49,5 @@ export interface UpdateEvent {
   slug?: string;
   gforms_url?: string;
   schedule_end?: Date;
+  is_bundle?: boolean;
 }
