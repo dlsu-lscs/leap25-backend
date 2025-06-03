@@ -28,7 +28,7 @@ export async function registerUserForEvent(
     }
 
     const event = events[0];
-    if (event.registered_slots >= event.max_slots) {
+    if (event.registered_slots + user_ids.length >= event.max_slots) {
       await connection.rollback();
       throw new Error('No available slots for this event');
     }
@@ -50,7 +50,7 @@ export async function registerUserForEvent(
       // create registration to db
       result = await connection.execute<mysql.ResultSetHeader>(
         'INSERT INTO registrations (user_id, event_id) VALUES (?, ?)',
-        [data.user_id, data.event_id]
+        [user_id, data.event_id]
       );
 
       registrations.push({
@@ -62,8 +62,8 @@ export async function registerUserForEvent(
 
     // update event registered_slots
     await connection.execute(
-      'UPDATE events SET registered_slots = registered_slots + 1 WHERE id = ?',
-      [data.event_id]
+      'UPDATE events SET registered_slots = registered_slots + ? WHERE id = ?',
+      [user_ids.length, data.event_id]
     );
 
     await connection.commit();
