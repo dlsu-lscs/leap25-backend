@@ -182,13 +182,15 @@ export async function getPayloadFields(
 
   if (!event) return null;
 
-  const [title_card, bg_img] = await Promise.all([
-    getImageUrlById(fields.titleCard?.['en-US'].sys?.id),
-    getImageUrlById(fields.bgImg?.['en-US'].sys?.id),
-  ]);
+  let title_card: string | null = null;
+  let bg_img: string | null = null;
 
-  if (!title_card || !bg_img) {
-    return null;
+  if (fields.titleCard?.['en-US']?.sys?.id) {
+    title_card = await getImageUrlById(fields.titleCard['en-US'].sys.id);
+  }
+
+  if (fields.bgImg?.['en-US']?.sys?.id) {
+    bg_img = await getImageUrlById(fields.bgImg['en-US'].sys.id);
   }
 
   return {
@@ -196,8 +198,8 @@ export async function getPayloadFields(
     title_card: title_card ?? '',
     title_fallback: fields.titleFallback?.['en-US'],
     bg_img: bg_img ?? '',
-    color: fields.color?.['en-US'],
-    short_desc: fields.shortDesc?.['en-US'],
+    color: fields.color?.['en-US'] ?? null,
+    short_desc: fields.shortDesc?.['en-US'] ?? null,
     contentful_id,
   };
 }
