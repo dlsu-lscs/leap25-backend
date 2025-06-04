@@ -14,16 +14,33 @@ export async function getAllUsers(
 
       const user = await UserService.getUserByEmail(email);
 
-      if (!user) {
-        res.status(404).json({ error: 'User not found.' });
-      }
-
-      res.status(200).json(user);
+      res.status(201).json(user);
       return;
     }
 
     const users = await UserService.getAllUsers();
     res.status(200).json(users);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getUserByEmail(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const email = req.params.email as string;
+
+    const user = await UserService.getUserByEmail(email);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found.' });
+    }
+
+    res.status(200).json(user);
+    return;
   } catch (error) {
     next(error);
   }

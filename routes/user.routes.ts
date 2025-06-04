@@ -7,6 +7,7 @@ const router = Router();
 
 router.post('/', UserController.createUser);
 router.get('/', UserController.getAllUsers);
+router.post('/email/:email', UserController.getUserByEmail);
 router.get(
   '/:userId/registrations',
   RegistrationController.getUserRegistrations

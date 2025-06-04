@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import type { User } from '../models/User';
-import { createUser } from './user.service';
+import { createUser, getUserByEmail, updateUser } from './user.service';
 
 export async function googleAuth2(
   accessToken: string
@@ -27,7 +27,13 @@ export async function googleAuth2(
       display_picture: payload.picture,
     };
 
-    await createUser(user);
+    let existing_user = await getUserByEmail(user.email);
+
+    if (existing_user?.id !== undefined) {
+      existing_user = (await updateUser(existing_user.id, user)) as User;
+    } else {
+      existing_user = await createUser(user);
+    }
 
     const jwt_token = jwt.sign(user, process.env.JWT_SECRET as string, {
       expiresIn: '30d',

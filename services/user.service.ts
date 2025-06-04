@@ -30,6 +30,25 @@ export async function getUserById(id: number): Promise<User | null> {
 export async function getUserByEmail(email: string): Promise<User | null> {
   const db = await getDB();
   const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+
+  if ((rows as any[]).length === 0) {
+    const localPart = email.split('@')[0];
+
+    if (!localPart) return null;
+
+    const name = localPart
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ');
+
+    await db.execute<mysql.ResultSetHeader>(
+      'INSERT INTO users (email, display_picture, name, google_id) VALUES (?, ?, ?, ?)',
+      [email, null, name, null]
+    );
+
+    return await getUserByEmail(email);
+  }
+
   const users = rows as User[];
   return users[0] || null;
 }
