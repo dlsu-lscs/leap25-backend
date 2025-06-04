@@ -10,6 +10,7 @@ export async function getAllEvents(
   try {
     const code = req.query.code as string;
     const day = parseInt(req.query.day as string);
+    const subtheme_name = req.body.subtheme_name;
 
     if (code) {
       const event = await EventService.getEventByCode(code);
@@ -24,7 +25,7 @@ export async function getAllEvents(
     }
 
     if (day) {
-      const events = await EventService.getEventsByDay(day);
+      const events = await EventService.getEventsByDay(day, subtheme_name);
 
       if (!events || events.length === 0) {
         res.status(404).json({ message: `No events found for day ${day}` });

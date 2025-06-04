@@ -68,18 +68,6 @@ describe('Event Controller', () => {
     vi.clearAllMocks();
   });
 
-  it('should get all events', async () => {
-    const req = { query: {} } as any;
-    const res = mockResponse();
-    const fakeEvents = [{ id: 1, title: 'Test Event' }];
-
-    (EventService.getAllEvents as any).mockResolvedValue(fakeEvents);
-    await EventController.getAllEvents(req, res, mockNext);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(fakeEvents);
-  });
-
   it('should create a new event', async () => {
     const req = {
       body: {

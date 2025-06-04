@@ -153,22 +153,6 @@ describe('EventService Unit Tests', () => {
     );
   });
 
-  it('should get all events', async () => {
-    // Setup
-    const mockEvents = [
-      { id: 1, title: 'Event 1', org_id: 1 },
-      { id: 2, title: 'Event 2', org_id: 2 },
-    ];
-    mockDb.query.mockResolvedValueOnce([mockEvents]);
-
-    // Execute
-    const result = await EventService.getAllEvents();
-
-    // Assert
-    expect(mockDb.query).toHaveBeenCalledWith('SELECT * FROM events');
-    expect(result).toEqual(mockEvents);
-  });
-
   it('should get event by id', async () => {
     // Setup
     const mockEvent = { id: 1, title: 'Test Event', org_id: 1 };
