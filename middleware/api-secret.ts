@@ -13,10 +13,9 @@ export function verifyApiSecretMiddleware(
 ) {
   const authHeader = req.headers.authorization;
 
-  if (authHeader && authHeader === process.env.API_SECRET) {
-    return next();
+  if (!authHeader && !(authHeader === process.env.API_SECRET)) {
+    res.status(401).json({ message: 'Unauthorized' });
   }
 
-  res.status(401).json({ message: 'Unauthorized' });
   next();
 }
