@@ -10,7 +10,7 @@ export async function getAllEvents(
   try {
     const code = req.query.code as string;
     const day = parseInt(req.query.day as string);
-    const subtheme_name = req.body?.subtheme_name;
+    const subtheme_name = req.query?.subtheme as string;
 
     if (code) {
       const event = await EventService.getEventByCode(code);

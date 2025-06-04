@@ -113,7 +113,7 @@ export async function createEventPayload(
     return null;
   }
 
-  const available_slots = fields.availableSlots?.['en-US'];
+  const available_slots = fields.maxSlots?.['en-US'];
   const max_slots = fields.maxSlots?.['en-US'];
 
   const event = {
@@ -315,7 +315,7 @@ export async function updateEventPayload(payload: any): Promise<Event | null> {
 
   if (subthemes.length === 0) return null;
 
-  const available_slots = fields.availableSlots?.['en-US'];
+  const available_slots = fields.maxSlots?.['en-US'];
   const max_slots = fields.maxSlots?.['en-US'];
 
   const updatedData: UpdateEvent = {
@@ -517,7 +517,7 @@ export async function getEventByCode(code: string): Promise<Event | null> {
 
 export async function getEventsByDay(
   day: number,
-  subtheme_name: string
+  subtheme_name: string | undefined
 ): Promise<Event[] | null> {
   const db = await getDB();
 
