@@ -17,6 +17,6 @@ export function verifyApiSecretMiddleware(
     return next();
   }
 
-  next();
   res.status(401).json({ message: 'Unauthorized' });
+  next();
 }
