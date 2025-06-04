@@ -15,6 +15,7 @@ export function verifyApiSecretMiddleware(
 
   if (!authHeader && !(authHeader === process.env.API_SECRET)) {
     res.status(401).json({ message: 'Unauthorized' });
+    return;
   }
 
   next();
