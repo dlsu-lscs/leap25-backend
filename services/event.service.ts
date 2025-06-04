@@ -314,7 +314,7 @@ export async function updateEventPayload(payload: any): Promise<Event | null> {
   )) as any[];
 
   if (subthemes.length === 0) return null;
-
+  
   const max_slots = fields.maxSlots?.['en-US'];
 
   const updatedData: UpdateEvent = {
