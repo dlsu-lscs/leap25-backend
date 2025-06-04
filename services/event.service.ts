@@ -517,7 +517,7 @@ export async function getEventByCode(code: string): Promise<Event | null> {
 
 export async function getEventsByDay(
   day: number,
-  subtheme_name: string
+  subtheme_name: string | undefined
 ): Promise<Event[] | null> {
   const db = await getDB();
 
