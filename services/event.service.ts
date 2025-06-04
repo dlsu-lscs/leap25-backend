@@ -314,8 +314,7 @@ export async function updateEventPayload(payload: any): Promise<Event | null> {
   )) as any[];
 
   if (subthemes.length === 0) return null;
-
-  const available_slots = fields.maxSlots?.['en-US'];
+  
   const max_slots = fields.maxSlots?.['en-US'];
 
   const updatedData: UpdateEvent = {
@@ -327,7 +326,6 @@ export async function updateEventPayload(payload: any): Promise<Event | null> {
     schedule: new Date(fields.schedule?.['en-US']),
     fee: fields.fee?.['en-US'],
     code: fields.code?.['en-US'],
-    registered_slots: max_slots - available_slots,
     max_slots: max_slots,
     slug: fields.slug?.['en-US'],
     gforms_url: fields.gFormsUrl?.['en-US'],
