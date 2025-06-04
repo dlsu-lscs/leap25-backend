@@ -80,7 +80,7 @@ const startServer = async (): Promise<void> => {
     // start periodic consistency checks
     const consistencyTimer = startConsistencyChecksWithLeaderElection();
 
-    app.use(verifyApiSecretMiddleware);
+    // app.use(verifyApiSecretMiddleware);
     app.use('/auth', authRouter);
     app.use('/users', userRouter);
     app.use('/events', eventRouter);
