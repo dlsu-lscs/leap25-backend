@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { urlencoded, json } from 'express';
 import 'dotenv/config';
+import type { Request, Response, NextFunction } from 'express';
 
 import { validateEnvironment } from './config/env';
 import { initDB, closeDB } from './config/database';
@@ -24,6 +25,8 @@ import {
   startConsistencyChecksWithLeaderElection,
 } from './services/caching';
 
+import { verifyApiSecretMiddleware } from './middleware/api-secret';
+
 // import SmeeClient from 'smee-client';
 //
 // const smee = new SmeeClient({
@@ -33,8 +36,6 @@ import {
 // });
 
 // const events = smee.start();
-
-validateEnvironment();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -57,17 +58,17 @@ const startServer = async (): Promise<void> => {
         credentials: true,
       })
     );
-    // skip caching for dynamic routes or authenticated requests
-    app.use((req, res, next) => {
-      const skipCache = req.method !== 'GET' || req.path.includes('/auth/');
-      if (skipCache) {
-        res.setHeader('Cache-Control', 'no-store');
-      } else {
-        // 5 min cache for static data
-        res.setHeader('Cache-Control', 'public, max-age=300');
-      }
-      next();
-    });
+    // // skip caching for dynamic routes or authenticated requests
+    // app.use((req, res, next) => {
+    //   const skipCache = req.method !== 'GET' || req.path.includes('/auth/');
+    //   if (skipCache) {
+    //     res.setHeader('Cache-Control', 'no-store');
+    //   } else {
+    //     // 5 min cache for static data
+    //     res.setHeader('Cache-Control', 'public, max-age=300');
+    //   }
+    //   next();
+    // });
 
     // configure session
     await configureSession(app);
@@ -79,6 +80,7 @@ const startServer = async (): Promise<void> => {
     // start periodic consistency checks
     const consistencyTimer = startConsistencyChecksWithLeaderElection();
 
+    app.use(verifyApiSecretMiddleware);
     app.use('/auth', authRouter);
     app.use('/users', userRouter);
     app.use('/events', eventRouter);
