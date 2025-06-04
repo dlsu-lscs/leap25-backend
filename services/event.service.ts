@@ -3,6 +3,7 @@ import { getDB } from '../config/database';
 import type { Event, CreateEvent, UpdateEvent } from '../models/Event';
 import type { EventMedia } from '../models/EventMedia';
 import { getOrg } from './contentful.service';
+import { getSubthemeByName } from './subtheme.service';
 import { redisEventOps } from '../config/redis';
 
 export async function createEvent(data: CreateEvent): Promise<Event> {
@@ -514,7 +515,10 @@ export async function getEventByCode(code: string): Promise<Event | null> {
   return (events as any[])[0] as Event;
 }
 
-export async function getEventsByDay(day: number): Promise<Event[] | null> {
+export async function getEventsByDay(
+  day: number,
+  subtheme_name: string
+): Promise<Event[] | null> {
   const db = await getDB();
 
   // padded_day ensures that the day starts with a '0'
@@ -523,6 +527,27 @@ export async function getEventsByDay(day: number): Promise<Event[] | null> {
   // non dynamic time (we will input the month later on then the day will be based on querty)
   const day_start = `2025-06-${padded_day} 00:00:00`;
   const day_end = `2025-06-${padded_day} 23:59:59`;
+
+  if (subtheme_name) {
+    const subtheme = await getSubthemeByName(subtheme_name);
+
+    if (!subtheme) {
+      return null;
+    }
+
+    const subtheme_id = subtheme.id;
+
+    const [events] = await db.query(
+      'SELECT * FROM events WHERE schedule >= ? AND schedule <= ? AND subtheme_id = ?',
+      [day_start, day_end, subtheme_id]
+    );
+
+    if ((events as any[]).length === 0) {
+      return null;
+    }
+
+    return events as Event[];
+  }
 
   const [events] = await db.query(
     'SELECT * FROM events WHERE schedule >= ? AND schedule <= ?',
