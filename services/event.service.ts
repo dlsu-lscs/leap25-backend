@@ -23,10 +23,11 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
     slug,
     gforms_url,
     schedule_end,
+    is_bundle,
   } = data;
 
   const [result] = await db.execute<mysql.ResultSetHeader>(
-    'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id, slug, gforms_url, schedule_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO events (org_id, title, description, subtheme_id, venue, schedule, fee, code, registered_slots, max_slots, contentful_id, slug, gforms_url, schedule_end, is_bundle) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       org_id,
       title,
@@ -42,6 +43,7 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
       slug,
       gforms_url,
       schedule_end,
+      is_bundle,
     ]
   );
 
@@ -62,6 +64,7 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
     slug,
     gforms_url,
     schedule_end,
+    is_bundle,
   };
 
   // initialize Redis cache for this new event
@@ -127,6 +130,7 @@ export async function createEventPayload(
     slug: fields.slug?.['en-US'],
     gforms_url: fields.gFormsUrl?.['en-US'],
     schedule_end: new Date(fields.scheduleEnd?.['en-US']),
+    is_bundle: fields.isBundle?.['en-US'],
   };
 
   console.log(event);
@@ -211,10 +215,11 @@ export async function updateEvent(
       slug = existingEvent.slug,
       gforms_url = existingEvent.gforms_url,
       schedule_end = existingEvent.schedule_end,
+      is_bundle = existingEvent.is_bundle,
     } = data;
 
     await connection.execute(
-      'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ?, slug = ?, gforms_url = ?, schedule_end = ? WHERE id = ?',
+      'UPDATE events SET org_id = ?, title = ?, description = ?, subtheme_id = ?, venue = ?, schedule = ?, fee = ?, code = ?, registered_slots = ?, max_slots = ?, slug = ?, gforms_url = ?, schedule_end = ?, is_bundle = ? WHERE id = ?',
       [
         org_id,
         title,
@@ -229,6 +234,7 @@ export async function updateEvent(
         slug,
         gforms_url,
         schedule_end,
+        is_bundle,
         id,
       ]
     );
