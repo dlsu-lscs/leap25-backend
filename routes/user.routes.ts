@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { googleOnly } from 'middleware/googleOnly';
 import * as UserController from '../controllers/user.controller';
 import * as RegistrationController from '../controllers/registration.controller';
 import * as BookmarkController from '../controllers/bookmark.controller';
@@ -6,8 +7,7 @@ import * as BookmarkController from '../controllers/bookmark.controller';
 const router = Router();
 
 router.post('/', UserController.createUser);
-router.get('/', UserController.getAllUsers);
-router.post('/email/:email', UserController.getUserByEmail);
+router.get('/', googleOnly, UserController.getAllUsers);
 router.get(
   '/:userId/registrations',
   RegistrationController.getUserRegistrations
