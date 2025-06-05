@@ -9,6 +9,7 @@ import type {
 import { getDB } from '../config/database';
 
 export async function createEventMedia(data: EventMedia): Promise<EventMedia> {
+  console.log(data);
   const { pub_url, event_id, contentful_id, pub_as_bg } = data;
   const db = await getDB();
 
@@ -25,6 +26,8 @@ export async function createEventMedia(data: EventMedia): Promise<EventMedia> {
     'SELECT * FROM event_pubs WHERE contentful_id = ?',
     [contentful_id]
   )) as any[];
+
+  console.log(event_media);
 
   return event_media[0] as EventMedia;
 }
