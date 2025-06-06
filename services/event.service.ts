@@ -7,6 +7,7 @@ import { getSubthemeByName } from './subtheme.service';
 import { redisEventOps } from '../config/redis';
 
 export async function createEvent(data: CreateEvent): Promise<Event> {
+  console.log(data);
   const db = await getDB();
 
   const {
@@ -47,6 +48,8 @@ export async function createEvent(data: CreateEvent): Promise<Event> {
       is_bundle,
     ]
   );
+
+  console.log(result);
 
   const insertId = result.insertId;
   const createdEvent = {
@@ -314,7 +317,7 @@ export async function updateEventPayload(payload: any): Promise<Event | null> {
   )) as any[];
 
   if (subthemes.length === 0) return null;
-  
+
   const max_slots = fields.maxSlots?.['en-US'];
 
   const updatedData: UpdateEvent = {

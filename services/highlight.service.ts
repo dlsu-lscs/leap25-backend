@@ -12,6 +12,7 @@ import { getImageUrlById } from './contentful.service';
 export async function createHighlight(
   data: CreateHighlight
 ): Promise<Highlight | null> {
+  console.log(data);
   const db = await getDB();
   const {
     event_id,
@@ -35,6 +36,8 @@ export async function createHighlight(
       contentful_id,
     ]
   );
+
+  console.log(highlights);
 
   return {
     id: highlights.insertId,

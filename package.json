@@ -55,6 +55,7 @@
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "google-auth-library": "^9.15.1",
+    "ip-range-check": "^0.2.0",
     "jsonwebtoken": "^8.5.1",
     "mysql2": "^3.14.0",
     "passport": "^0.7.0",
