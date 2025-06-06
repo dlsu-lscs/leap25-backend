@@ -28,7 +28,7 @@ export async function registerUserForEvent(
     }
 
     const event = events[0];
-    if (event.registered_slots + user_ids.length >= event.max_slots) {
+    if (event.registered_slots + user_ids.length > event.max_slots) {
       await connection.rollback();
       throw new Error('No available slots for this event');
     }
