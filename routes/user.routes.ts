@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { googleOnly } from 'middleware/googleOnly';
+import { googleOnly } from '../middleware/googleOnly';
 import * as UserController from '../controllers/user.controller';
 import * as RegistrationController from '../controllers/registration.controller';
 import * as BookmarkController from '../controllers/bookmark.controller';
