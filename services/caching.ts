@@ -335,7 +335,7 @@ export const startConsistencyChecksWithLeaderElection = (): NodeJS.Timeout => {
           return;
         }
 
-        console.log(`Instance ${instanceId} performing consistency checks`);
+        // console.log(`Instance ${instanceId} performing consistency checks`);
 
         await runConsistencyChecks();
 
@@ -498,13 +498,13 @@ async function runConsistencyChecks(): Promise<void> {
       }
     }
 
-    console.log(`Event slots consistency check completed:
-      - Total events: ${events.length}
-      - Consistent: ${consistent}
-      - Fixed: ${fixed}
-      - Errors: ${errors}
-      - Unavailable: ${unavailable}
-    `);
+    // console.log(`Event slots consistency check completed:
+    //   - Total events: ${events.length}
+    //   - Consistent: ${consistent}
+    //   - Fixed: ${fixed}
+    //   - Errors: ${errors}
+    //   - Unavailable: ${unavailable}
+    // `);
 
     await client.set(
       'cache:consistency:status',
