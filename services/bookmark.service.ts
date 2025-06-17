@@ -14,7 +14,7 @@ export async function createBookmark(
   );
 
   if (bookmark.affectedRows === 0) {
-    console.error('Error creating a new bookmark');
+    // console.error('Error creating a new bookmark');
     return null;
   }
 
