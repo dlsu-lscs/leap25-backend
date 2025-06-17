@@ -54,24 +54,25 @@ const startServer = async (): Promise<void> => {
     app.use(urlencoded({ extended: true }));
     app.use(
       cors({
-        origin: (origin, callback) => {
-          if (!origin) return callback(null, true);
-
-          // for multiple cors origins (separated by comma)
-          const allowedOrigins = process.env.CORS_ORIGIN
-            ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-            : ['*'];
-
-          if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-            callback(null, true);
-          } else {
-            callback(
-              new Error(
-                'nice try, your ip has been reported, logged, and flagged. reflect on your atrocious actions little one.'
-              )
-            );
-          }
-        },
+        origin: process.env.CORS_ORIGIN || '*',
+        // origin: (origin, callback) => {
+        //   if (!origin) return callback(null, true);
+        //
+        //   // for multiple cors origins (separated by comma)
+        //   const allowedOrigins = process.env.CORS_ORIGIN
+        //     ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+        //     : ['*'];
+        //
+        //   if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        //     callback(null, true);
+        //   } else {
+        //     callback(
+        //       new Error(
+        //         'nice try, your ip has been reported, logged, and flagged. reflect on your atrocious actions little one.'
+        //       )
+        //     );
+        //   }
+        // },
         credentials: true,
       })
     );
