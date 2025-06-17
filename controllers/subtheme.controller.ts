@@ -16,7 +16,7 @@ export async function getAllSubthemes(
       const subtheme = await SubthemeService.getSubthemeByName(name);
 
       if (!subtheme) {
-        res.status(404).json({ error: 'Subtheme not found by name.' });
+        // res.status(404).json({ error: 'Subtheme not found by name.' });
         return;
       }
 
