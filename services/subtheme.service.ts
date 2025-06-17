@@ -193,7 +193,8 @@ export async function getSubthemeByName(
   );
 
   if ((subthemes as any[]).length === 0) {
-    throw new Error('Subtheme not found by name.');
+    // throw new Error('Subtheme not found by name.');
+    return null;
   }
 
   return (subthemes as any[])[0] as Subtheme;
